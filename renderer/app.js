@@ -285,7 +285,8 @@ function setupMouseBehavior(mode) {
 
 island.addEventListener('mouseenter', () => {
   if (currentMode === 'notch') window.electronAPI.setIgnoreMouse(false)
-  if (state.isRunning) {
+  // Only hover-pause when actively reading (not in edit/idle)
+  if (state.isRunning && island.classList.contains('state-read')) {
     state.isHoverPaused = true
     state.isSpeaking = false
     setMicState('paused', 'Hover pause')

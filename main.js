@@ -21,9 +21,44 @@ let config = loadConfig()
 
 // Persisted scripts
 const SCRIPTS_PATH = path.join(os.homedir(), '.teleprompter-scripts.json')
+const DEFAULT_SCRIPTS = [
+  {
+    name: 'About Me',
+    text: `Hi, I'm Arun — a full-stack engineer with five years of experience building products that scale.
+
+I've worked on systems serving over ten million customers, and I love building things that actually matter to people.
+
+Outside of work I ride bikes, play guitar, and chase anything with an adrenaline spike — whether that's a mountain trail, a racetrack, or just a stupid idea that sounds fun. Life's too short for boring weekends.
+`
+  },
+  {
+    name: 'Meeting Notes',
+    text: `Quick recap from yesterday's sync.
+
+We aligned on the Q2 roadmap priorities — performance improvements take the lead, followed by the new onboarding flow.
+
+Action items: design review by Friday, API spec finalized by end of next week.
+
+That's all — any questions, ping me directly.`
+  },
+  {
+    name: 'Product Demo',
+    text: `Let me walk you through what we've built.
+
+OpenTeleprompter is a voice-activated teleprompter that lives right in your Mac's notch.
+
+Speak — it scrolls. Stop — it pauses. No subscriptions, no setup, just open and go.
+
+It's the simplest way to deliver your script naturally, without losing eye contact.
+
+Give it a try — I think you'll love it.`
+  }
+]
+
 function loadScripts() {
   try { return JSON.parse(fs.readFileSync(SCRIPTS_PATH, 'utf8')) } catch(e) {}
-  return []
+  // First run — return default sample scripts
+  return DEFAULT_SCRIPTS
 }
 function saveScripts(scripts) { fs.writeFileSync(SCRIPTS_PATH, JSON.stringify(scripts, null, 2)) }
 
