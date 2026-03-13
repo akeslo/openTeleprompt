@@ -16,7 +16,7 @@ const state = {
 
 let VOLUME_THRESHOLD = 0.018
 const SILENCE_DELAY_MS = 400
-const SCROLL_SPEED_BASE = 0.7
+const SCROLL_SPEED_BASE = 0.1
 let fontSize = 16  // default font size in px
 
 const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
@@ -118,16 +118,29 @@ function setSpeed(index) {
   speedVal.textContent = state.scrollSpeed + '×'
 }
 
+// Use float scroll position for perfectly smooth sub-pixel motion
+let scrollPos = 0
+
 // ── Scroll loop ────────────────────────────────────────────
 function scrollLoop() {
   if (!state.isRunning) return
   const paused = state.isPaused || state.isHoverPaused
   if (state.isSpeaking && !paused) {
-    const atEnd = scrollVP.scrollTop >= scrollVP.scrollHeight - scrollVP.clientHeight - 10
-    if (!atEnd) scrollVP.scrollTop += SCROLL_SPEED_BASE * state.scrollSpeed
+    const maxScroll = scrollVP.scrollHeight - scrollVP.clientHeight
+    if (scrollPos < maxScroll - 10) {
+      scrollPos += SCROLL_SPEED_BASE * state.scrollSpeed
+      scrollPos = Math.min(scrollPos, maxScroll)
+      // Use scrollTo with exact float — browsers handle sub-pixel smoothly
+      scrollVP.scrollTo({ top: scrollPos })
+    }
   }
   state.scrollAnimFrame = requestAnimationFrame(scrollLoop)
 }
+
+// Sync scrollPos when user manually scrolls
+scrollVP.addEventListener('scroll', () => {
+  if (!state.isSpeaking) scrollPos = scrollVP.scrollTop
+})
 
 // ── Mic ────────────────────────────────────────────────────
 async function startMic() {
@@ -294,12 +307,13 @@ document.getElementById('btn-start').addEventListener('click', () => {
   saveCurrentScript()
   buildScript(text)
   showView('read')
+  scrollPos = 0
   scrollVP.scrollTop = 0
   startMic()
 })
 
 document.getElementById('btn-done').addEventListener('click', () => { stopMic(); showView('idle') })
-document.getElementById('btn-back').addEventListener('click', () => { scrollVP.scrollTop = 0 })
+document.getElementById('btn-back').addEventListener('click', () => { scrollPos = 0; scrollVP.scrollTop = 0 })
 document.getElementById('btn-pause').addEventListener('click', togglePause)
 
 document.getElementById('btn-faster').addEventListener('click', () => setSpeed(speedIndex + 1))
