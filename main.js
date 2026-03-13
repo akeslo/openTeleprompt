@@ -33,6 +33,7 @@ function createPrompterWindow() {
   const isNotch = config.mode !== 'classic'
 
   prompterWin = new BrowserWindow({
+    icon: path.join(__dirname, 'icon.png'),
     width: isNotch ? 220 : 560,
     height: isNotch ? 50 : 400,
     x: Math.floor((width - (isNotch ? 220 : 560)) / 2),
@@ -129,9 +130,9 @@ function toggleSettings() {
 
 // ── Tray ───────────────────────────────────────────────────
 function createTray() {
-  const icon = nativeImage.createEmpty()
+  const icon = nativeImage.createFromPath(path.join(__dirname, 'tray-icon.png'))
+  icon.setTemplateImage(true)  // auto light/dark switching
   tray = new Tray(icon)
-  tray.setTitle('✦')
   tray.setToolTip('Teleprompter — click for settings')
   tray.on('click', toggleSettings)
 }
@@ -232,7 +233,12 @@ ipcMain.handle('get-window-pos', () => {
 
 // ── App init ───────────────────────────────────────────────
 app.whenReady().then(async () => {
-  if (process.platform === 'darwin') app.dock.hide()
+  if (process.platform === 'darwin') {
+    app.dock.hide()
+    // Set dock icon
+    const dockIcon = nativeImage.createFromPath(path.join(__dirname, 'icon.png'))
+    app.dock.setIcon(dockIcon)
+  }
   if (process.platform === 'darwin') {
     const status = systemPreferences.getMediaAccessStatus('microphone')
     if (status !== 'granted') await systemPreferences.askForMediaAccess('microphone')
