@@ -23,7 +23,7 @@ A free, open source voice-activated teleprompter that lives in your Mac's notch.
 ## Features
 
 - 🏝️ **Lives in the notch** — right below your camera, eyes stay natural
-- 🎙️ **Voice-activated scroll** — speaks = scrolls, silence = pauses, fully local
+- 🎙️ **Only hears you** — frequency analysis (85–3400 Hz), not just volume. Meeting audio from speakers won't trigger it. Only your voice does.
 - 🔇 **Invisible during screen share** — only you can see it
 - 🖱️ **Hover to pause** — instant freeze without clicking
 - ⚡ **Auto-scroll mode** — no mic needed

@@ -868,8 +868,8 @@
     <div class="features-layout">
       <div class="feat wide reveal">
         <span class="feat-icon">🎙️</span>
-        <h3>Voice-activated scroll</h3>
-        <p>Powered by real-time microphone volume detection. No transcription, no network — entirely local. Instant response, zero latency.</p>
+        <h3>Only hears <em>you</em></h3>
+        <p>Detects your voice using frequency analysis — not just volume. It listens for the 85–3400 Hz range of human speech and ignores everything outside it: meeting audio from your speakers, music, notifications. Your colleagues talking through your headphones won't trigger it. Only your voice does.</p>
         <div class="mini-wave">
           <div class="mw" style="height:8px;animation-delay:0s"></div>
           <div class="mw" style="height:16px;animation-delay:0.1s"></div>
@@ -941,7 +941,11 @@
     <div class="faq-wrap">
       <div class="faq-item reveal">
         <button class="faq-q">Does it work without internet?<span class="faq-arrow">↓</span></button>
-        <div class="faq-a"><div class="faq-inner"><p>Yes, completely. OpenTeleprompter uses your microphone's volume level to detect speech — no transcription, no network calls. Everything runs locally on your Mac.</p></div></div>
+        <div class="faq-a"><div class="faq-inner"><p>Yes, completely. OpenTeleprompter uses real-time frequency analysis on your microphone input — no speech transcription, no network calls, no cloud anything. Everything runs locally on your Mac with zero latency.</p></div></div>
+      </div>
+      <div class="faq-item reveal" style="transition-delay:0.05s">
+        <button class="faq-q">Will meeting audio or my speakers accidentally trigger the scroll?<span class="faq-arrow">↓</span></button>
+        <div class="faq-a"><div class="faq-inner"><p>No — and this is by design. OpenTeleprompter doesn't just detect volume. It runs a frequency analysis on your mic input and only responds to sound in the 85–3400 Hz range — the frequency band of human speech. Audio coming through your laptop speakers (meeting participants, music, notifications) has a different frequency profile and gets filtered out. Your colleagues talking won't scroll your script. Only your voice does. It also requires ~130ms of sustained voice activity before scrolling begins, to avoid false triggers from plosives or brief sounds.</p></div></div>
       </div>
       <div class="faq-item reveal" style="transition-delay:0.05s">
         <button class="faq-q">Will viewers see it during a call?<span class="faq-arrow">↓</span></button>
