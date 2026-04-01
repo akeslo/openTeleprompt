@@ -70,15 +70,17 @@ function showView(name) {
   if (name === 'idle') {
     document.getElementById('view-idle').classList.add('active')
     API.resizePrompter({ width: 220, height: 50 })
+    API.setIgnoreMouse(false)
   } else if (name === 'edit') {
     document.getElementById('view-edit').classList.add('active')
     island.classList.add('state-edit')
     API.resizePrompter({ width: 560, height: 300 })
+    API.setIgnoreMouse(false)
     setTimeout(() => scriptInput.focus(), 300)
   } else if (name === 'read') {
     document.getElementById('view-read').classList.add('active')
     island.classList.add('state-read')
-    API.resizePrompter({ width: 420, height: 170 })
+    API.resizePrompter({ width: 420, height: 200 })
   }
 }
 
@@ -359,7 +361,7 @@ function setupMouseBehavior(mode) {
   updateDragRegion(mode)
   if (mode === 'notch') {
     document.body.classList.remove('mode-classic')
-    API.setIgnoreMouse(false)
+    API.setIgnoreMouse(false)  // clickable in idle/notch mode
     API.setMovable(false)
   } else {
     document.body.classList.add('mode-classic')
@@ -378,7 +380,7 @@ island.addEventListener('mouseenter', () => {
   }
 })
 island.addEventListener('mouseleave', () => {
-  // Only re-enable passthrough when actively reading — not in edit/idle states
+  // Only enable passthrough when actively reading (scrolling) — not in idle/edit
   if (currentMode === 'notch' && state.isRunning && island.classList.contains('state-read')) {
     API.setIgnoreMouse(true)
   }

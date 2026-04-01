@@ -223,6 +223,7 @@
   const API = {
     getConfig: () => tauriInvoke('get_config'),
     setConfig: (patch) => tauriInvoke('set_config', { patch }),
+    switchMode: (mode) => tauriInvoke('switch_mode', { mode }),
     onConfigUpdate: (cb) => { tauriListen('config-update', (e) => cb(e.payload)) },
     togglePrompter: () => tauriInvoke('toggle_prompter'),
     resizeSettings: (dims) => tauriInvoke('resize_settings', { dims }),
@@ -332,7 +333,7 @@
     btn.addEventListener('click', () => {
       document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'))
       btn.classList.add('active')
-      API.setConfig({ mode: btn.dataset.mode })
+      API.switchMode(btn.dataset.mode)
     })
   })
 
