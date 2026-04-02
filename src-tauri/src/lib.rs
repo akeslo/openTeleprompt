@@ -582,18 +582,29 @@ pub fn run() {
             });
 
             // ── Shortcuts ──────────────────────────────────
-            app_handle.global_shortcut().on_shortcuts(
-                [
-                    Shortcut::new(Some(Modifiers::SUPER   | Modifiers::SHIFT), Code::Space),
-                    Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::Space),
-                    Shortcut::new(Some(Modifiers::SUPER   | Modifiers::SHIFT), Code::ArrowUp),
-                    Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::ArrowUp),
-                    Shortcut::new(Some(Modifiers::SUPER   | Modifiers::SHIFT), Code::ArrowDown),
-                    Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::ArrowDown),
-                    Shortcut::new(Some(Modifiers::SUPER   | Modifiers::SHIFT), Code::KeyR),
-                    Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyR),
-                ],
-                move |app, shortcut, event| {
+            // Use only Ctrl+Shift variants on Windows (Super/Win key combos conflict with system shortcuts)
+            #[cfg(target_os = "windows")]
+            let shortcuts = vec![
+                Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::Space),
+                Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::ArrowUp),
+                Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::ArrowDown),
+                Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyR),
+            ];
+            #[cfg(not(target_os = "windows"))]
+            let shortcuts = vec![
+                Shortcut::new(Some(Modifiers::SUPER   | Modifiers::SHIFT), Code::Space),
+                Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::Space),
+                Shortcut::new(Some(Modifiers::SUPER   | Modifiers::SHIFT), Code::ArrowUp),
+                Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::ArrowUp),
+                Shortcut::new(Some(Modifiers::SUPER   | Modifiers::SHIFT), Code::ArrowDown),
+                Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::ArrowDown),
+                Shortcut::new(Some(Modifiers::SUPER   | Modifiers::SHIFT), Code::KeyR),
+                Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyR),
+            ];
+
+            // Register shortcuts — skip any that are already taken by the OS
+            for sc in shortcuts {
+                let _ = app_handle.global_shortcut().on_shortcut(sc, move |app, shortcut, event| {
                     if event.state() != ShortcutState::Pressed { return; }
                     let action = match shortcut.key {
                         Code::Space     => "pause",
@@ -603,8 +614,8 @@ pub fn run() {
                         _ => return,
                     };
                     let _ = app.emit_to("prompter", "shortcut", action);
-                },
-            )?;
+                });
+            }
 
             Ok(())
         })
