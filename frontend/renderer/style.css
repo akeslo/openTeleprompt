@@ -309,3 +309,4 @@ body.mode-classic #island.state-read {
 .pill-btn.ghost:hover { background: rgba(255,255,255,0.12); color: #fff; }
 .pill-btn.accent { background: #818cf8; color: #fff; }
 .pill-btn.accent:hover { opacity: 0.85; }
+.pill-btn.icon-btn { padding: 5px 8px; display: flex; align-items: center; justify-content: center; }

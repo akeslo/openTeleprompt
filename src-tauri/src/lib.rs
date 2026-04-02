@@ -303,6 +303,11 @@ fn hide_settings(app: AppHandle) {
 }
 
 #[tauri::command]
+fn open_settings(app: AppHandle) {
+    show_settings(&app);
+}
+
+#[tauri::command]
 fn close_welcome(app: AppHandle) {
     if let Some(w) = app.get_webview_window("welcome") {
         let _ = w.close();
@@ -460,7 +465,7 @@ pub fn run() {
             quit_app, open_devtools,
             hide_settings, start_drag,
             set_movable, move_window, get_window_pos,
-            close_welcome, open_url,
+            close_welcome, open_url, open_settings,
 
         ])
         .setup(|app| {

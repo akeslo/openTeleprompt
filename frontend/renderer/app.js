@@ -17,6 +17,7 @@ const API = {
   resizeSettings: (dims) => tauriInvoke('resize_settings', { dims }),
   quit: () => tauriInvoke('quit_app'),
   openDevTools: () => tauriInvoke('open_devtools'),
+  openSettings: () => tauriInvoke('open_settings'),
   setMovable: (v) => tauriInvoke('set_movable', { movable: v }),
   moveWindow: (pos) => tauriInvoke('move_window', { pos }),
   getWindowPos: () => tauriInvoke('get_window_pos'),
@@ -420,6 +421,7 @@ API.onConfigUpdate((cfg) => {
 document.getElementById('btn-open').addEventListener('click', () => showView('edit'))
 
 document.getElementById('btn-collapse').addEventListener('click', () => { stopMic(); showView('idle') })
+document.getElementById('btn-settings').addEventListener('click', () => API.openSettings())
 
 document.getElementById('btn-save').addEventListener('click', () => {
   saveCurrentScript()
