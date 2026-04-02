@@ -2170,7 +2170,7 @@ dependencies = [
 
 [[package]]
 name = "open-teleprompter"
-version = "1.0.0"
+version = "2.2.0"
 dependencies = [
  "dirs 5.0.1",
  "open",
