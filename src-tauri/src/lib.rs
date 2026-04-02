@@ -182,9 +182,14 @@ fn get_scripts() -> Vec<Script> { load_scripts() }
 fn save_scripts(scripts: Vec<Script>) { save_scripts_to_disk(&scripts); }
 
 #[tauri::command]
-fn set_ignore_mouse(app: AppHandle, ignore: bool) -> Result<(), String> {
+fn set_ignore_mouse(app: AppHandle, state: State<AppState>, ignore: bool) -> Result<(), String> {
+    // Never enable click-through in classic mode — buttons must be clickable
+    let cfg = state.config.lock().unwrap();
+    let is_classic = cfg.mode == "classic";
+    drop(cfg);
     if let Some(w) = get_prompter(&app) {
-        w.set_ignore_cursor_events(ignore).map_err(|e| e.to_string())?;
+        let effective = if is_classic { false } else { ignore };
+        w.set_ignore_cursor_events(effective).map_err(|e| e.to_string())?;
     }
     Ok(())
 }
