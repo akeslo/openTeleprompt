@@ -26,19 +26,19 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        // On Windows: classic mode (no notch), screenshare protection off (causes render issues)
+        // macOS: notch mode, Windows: classic mode
         #[cfg(target_os = "windows")]
-        let (default_mode, default_screenshare) = ("classic".to_string(), false);
+        let default_mode = "classic".to_string();
         #[cfg(not(target_os = "windows"))]
-        let (default_mode, default_screenshare) = ("notch".to_string(), true);
+        let default_mode = "notch".to_string();
 
         Self {
             scroll_speed: 1.0,
             threshold: 0.018,
-            screenshare_hidden: default_screenshare,
+            screenshare_hidden: true,  // hide on screenshare: ON by default (both platforms)
             mode: default_mode,
             opacity: 1.0,
-            auto_scroll: false,
+            auto_scroll: true,         // voice input: ON by default (both platforms)
             mic_device_id: "default".to_string(),
         }
     }
