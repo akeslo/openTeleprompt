@@ -155,6 +155,9 @@ fn set_config(app: AppHandle, state: State<AppState>, patch: serde_json::Value) 
 /// Safe mode switch — collapses JS first, then recreates window
 #[tauri::command]
 fn switch_mode(app: AppHandle, state: State<AppState>, mode: String) {
+    // Windows doesn't support notch mode — ignore mode switches
+    #[cfg(target_os = "windows")]
+    let mode = "classic".to_string();
     {
         let mut cfg = state.config.lock().unwrap();
         cfg.mode = mode.clone();
@@ -460,7 +463,10 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
-            let cfg = app_handle.state::<AppState>().config.lock().unwrap().clone();
+            let mut cfg = app_handle.state::<AppState>().config.lock().unwrap().clone();
+            // Windows has no physical notch — force classic mode always
+            #[cfg(target_os = "windows")]
+            { cfg.mode = "classic".to_string(); }
             let is_notch = cfg.mode != "classic";
 
             let monitor  = app_handle.primary_monitor().ok().flatten();
