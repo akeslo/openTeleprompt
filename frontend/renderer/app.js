@@ -75,7 +75,7 @@ function showView(name) {
   } else if (name === 'edit') {
     document.getElementById('view-edit').classList.add('active')
     island.classList.add('state-edit')
-    API.resizePrompter({ width: 560, height: 300 })
+    API.resizePrompter({ width: 540, height: 300 })
     API.setIgnoreMouse(false)
     setTimeout(() => scriptInput.focus(), 300)
   } else if (name === 'read') {
