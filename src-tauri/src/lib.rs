@@ -637,11 +637,19 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                if window.label() == "settings" {
-                    window.hide().ok();
-                    api.prevent_close();
+            match event {
+                tauri::WindowEvent::CloseRequested { api, .. } => {
+                    if window.label() == "settings" {
+                        window.hide().ok();
+                        api.prevent_close();
+                    }
+                    // Prevent prompter from closing — hide instead
+                    if window.label() == "prompter" {
+                        window.hide().ok();
+                        api.prevent_close();
+                    }
                 }
+                _ => {}
             }
         })
         .run(tauri::generate_context!())
