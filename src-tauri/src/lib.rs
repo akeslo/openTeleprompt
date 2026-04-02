@@ -212,7 +212,7 @@ fn resize_prompter(app: AppHandle, state: State<AppState>, dims: serde_json::Val
 
         // Always use exact island size — center the window horizontally
         // Island is centered via CSS within this window, so no full-screen-width needed
-        let win_w = width.max(220.0);
+        let win_w = width.max(200.0);
         let win_h = height.max(36.0);
         let x = (screen_w - win_w) / 2.0;
         w.set_size(LogicalSize::new(win_w, win_h)).map_err(|e| e.to_string())?;

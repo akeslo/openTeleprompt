@@ -16,11 +16,11 @@ html, body {
 #island {
   position: absolute;
   top: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  width: 100%;
 
   /* Pill shape — starts narrow like the notch */
-  width: 200px;
   height: 36px;
   border-radius: 20px;
 
