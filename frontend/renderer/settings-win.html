@@ -511,10 +511,11 @@
     if (isVisible) startMeter(); else stopMeter()
   })
 
-  // Auto-resize to content
+  // Auto-resize to content AND reposition so bottom sticks to taskbar
   function fitWindow() {
     const h = document.getElementById('panel').getBoundingClientRect().height
-    API.resizeSettings({ height: Math.ceil(h) + 2 })
+    const finalH = Math.ceil(h) + 2
+    API.resizeSettings({ height: finalH, stickToTaskbar: true })
   }
   new ResizeObserver(fitWindow).observe(document.getElementById('panel'))
 

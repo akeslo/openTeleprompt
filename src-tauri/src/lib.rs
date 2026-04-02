@@ -250,9 +250,8 @@ fn toggle_prompter(app: AppHandle) -> Result<bool, String> {
 fn resize_settings(app: AppHandle, dims: serde_json::Value) -> Result<(), String> {
     let Some(w) = get_settings(&app) else { return Ok(()) };
     let height = dims.get("height").and_then(|v| v.as_f64()).unwrap_or(380.0);
-    let pos = w.outer_position().map_err(|e| e.to_string())?;
+    let stick_to_taskbar = dims.get("stickToTaskbar").and_then(|v| v.as_bool()).unwrap_or(false);
 
-    // Use correct width per platform, cap height to screen
     #[cfg(target_os = "windows")]
     let panel_w = 220.0_f64;
     #[cfg(not(target_os = "windows"))]
@@ -260,11 +259,39 @@ fn resize_settings(app: AppHandle, dims: serde_json::Value) -> Result<(), String
 
     let monitor = w.current_monitor().ok().flatten();
     let scale = monitor.as_ref().map(|m| m.scale_factor()).unwrap_or(1.0);
-    let screen_h = monitor.map(|m| m.size().height as f64 / scale).unwrap_or(900.0);
-    let capped_h = height.min(screen_h - 80.0);
+    let screen_h = monitor.as_ref().map(|m| m.size().height as f64 / scale).unwrap_or(900.0);
+    let capped_h = height.min(screen_h - 40.0);
 
     w.set_size(LogicalSize::new(panel_w, capped_h)).map_err(|e| e.to_string())?;
-    w.set_position(pos).map_err(|e| e.to_string())?;
+
+    // On Windows, after resize reposition so bottom sticks to taskbar top
+    #[cfg(target_os = "windows")]
+    if stick_to_taskbar {
+        if let Some(tray) = app.tray_by_id("main-tray") {
+            if let Ok(Some(rect)) = tray.rect() {
+                let screen_w = monitor.as_ref().map(|m| m.size().width as f64 / scale).unwrap_or(1440.0);
+                let (tx, ty) = match rect.position {
+                    tauri::Position::Physical(p) => (p.x as f64 / scale, p.y as f64 / scale),
+                    tauri::Position::Logical(p)  => (p.x, p.y),
+                };
+                let tw = match rect.size {
+                    tauri::Size::Physical(s) => s.width as f64 / scale,
+                    tauri::Size::Logical(s)  => s.width,
+                };
+                let mut x = tx + tw / 2.0 - panel_w / 2.0;
+                x = x.max(8.0).min(screen_w - panel_w - 8.0);
+                let y = ty - capped_h; // bottom of panel = top of taskbar
+                w.set_position(LogicalPosition::new(x, y)).map_err(|e| e.to_string())?;
+            }
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        let pos = w.outer_position().map_err(|e| e.to_string())?;
+        w.set_position(pos).map_err(|e| e.to_string())?;
+    }
+
     Ok(())
 }
 
