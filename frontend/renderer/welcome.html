@@ -372,7 +372,8 @@
         <div class="step-body">
           <div class="step-title">Tweak from the <span id="settings-access-label">menu bar icon</span></div>
           <div class="step-desc" id="settings-access-desc">Click the icon in your menu bar to open settings — speed, sensitivity, mic, opacity and more.</div>
-          <img id="tray-hint-img" src="tray-hint.png" alt="Menu bar icon location" style="display:none;margin-top:10px;width:100%;max-width:260px;border-radius:6px;opacity:0.85;">
+          <img id="tray-hint-mac" src="tray-hint-mac.png" alt="Menu bar icon location" style="display:none;margin-top:10px;width:100%;max-width:260px;border-radius:6px;opacity:0.85;">
+          <img id="tray-hint-win" src="tray-hint-win.png" alt="System tray icon location" style="display:none;margin-top:10px;width:100%;max-width:260px;border-radius:0;opacity:0.85;">
         </div>
       </div>
     </div>
@@ -530,9 +531,12 @@
     document.head.appendChild(style)
   }
 
-  // Show tray hint image on macOS only
-  if (!isWindows) {
-    const img = document.getElementById('tray-hint-img')
+  // Show platform-specific tray hint image
+  if (isWindows) {
+    const img = document.getElementById('tray-hint-win')
+    if (img) img.style.display = 'block'
+  } else {
+    const img = document.getElementById('tray-hint-mac')
     if (img) img.style.display = 'block'
   }
 
