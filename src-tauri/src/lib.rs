@@ -400,6 +400,9 @@ fn get_settings_position(app: &AppHandle) -> (f64, f64) {
 fn show_settings(app: &AppHandle) {
     let (x, y) = get_settings_position(app);
 
+    #[cfg(target_os = "windows")]
+    let (settings_url, win_w, win_h) = ("renderer/settings-win.html", 320.0_f64, 480.0_f64);
+    #[cfg(not(target_os = "windows"))]
     let (settings_url, win_w, win_h) = ("renderer/settings.html", 280.0_f64, 380.0_f64);
 
     if let Some(w) = get_settings(app) {
