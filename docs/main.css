@@ -431,6 +431,13 @@
       transition: color 0.2s, border-color 0.2s, transform 0.15s;
     }
     .btn-ghost:hover { color: var(--text); border-color: var(--accent); transform: translateY(-2px); }
+    .ph-badge-link {
+      display: inline-flex; align-items: center;
+      transition: opacity 0.2s, transform 0.15s;
+      border-radius: 8px; overflow: hidden;
+    }
+    .ph-badge-link:hover { opacity: 0.85; transform: translateY(-2px); }
+    .ph-badge-link img { display: block; height: 44px; width: auto; }
 
     /* ── MOCKUP ── */
     /* ── HERO DEMO: faithful Dynamic Island replica ── */
