@@ -40,7 +40,7 @@
       --corner-bg: #090909;   /* solid — concave shadow needs opaque color */
     }
 
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; overflow-x: hidden; }
 
     body {
       background: var(--bg);
@@ -1124,6 +1124,31 @@
       .hero h1 { font-size: 42px; }
       .section-h { font-size: 32px; }
       .menubar-right svg:not(:last-of-type) { display: none; }
+    }
+
+    @media (max-width: 430px) {
+      /* Prevent horizontal overflow on narrow phones */
+      body { overflow-x: hidden; }
+      .hero { overflow: hidden; padding: 48px 16px 72px; }
+      .orb-1 { width: 300px; height: 300px; }
+      .orb-2, .orb-3 { display: none; }
+
+      /* Menubar: clip to viewport, hide island on very small screens */
+      .menubar { overflow: hidden; max-width: 100vw; }
+      .app-island-wrap { display: none; }
+
+      /* Hero text: ensure it fits */
+      .hero h1 { font-size: 38px; overflow-wrap: break-word; word-break: break-word; padding: 0 4px; }
+      .hero-sub { font-size: 15px; padding: 0 4px; }
+
+      /* Badges: stack vertically, full width */
+      .hero-badges { flex-direction: column; align-items: center; gap: 8px; margin-bottom: 28px; }
+      .hero-badge { width: auto; max-width: 90vw; text-align: center; }
+
+      /* Hero actions: PH badge full width below buttons */
+      .hero-actions { gap: 10px; }
+      .ph-badge-link { width: 100%; max-width: 300px; justify-content: center; }
+      .ph-badge-link img { height: 40px; width: auto; }
     }
 
     /* ── HERO FEATURE CARD ── */
