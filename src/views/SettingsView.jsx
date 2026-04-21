@@ -197,13 +197,13 @@ export default function SettingsView() {
             <div className="s-setting-row">
               <span className="s-label">Style</span>
               <div className="s-segmented">
-                {['notch', 'classic', 'float'].map(m => (
+                {['notch', 'classic'].map(m => (
                   <button
                     key={m}
                     className={`s-seg-btn ${mode === m ? 'active' : ''}`}
                     onClick={() => {
                       setMode(m)
-                      API.switchMode(m === 'float' ? 'classic' : m)
+                      API.switchMode(m)
                     }}
                   >
                     {m.charAt(0).toUpperCase() + m.slice(1)}
