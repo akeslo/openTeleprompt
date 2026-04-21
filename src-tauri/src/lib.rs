@@ -523,6 +523,11 @@ fn start_drag(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn relay_shortcut(app: AppHandle, action: String) {
+    let _ = app.emit_to("prompter", "shortcut", action);
+}
+
+#[tauri::command]
 fn hide_settings(app: AppHandle) {
     if let Some(w) = get_settings(&app) { let _ = w.hide(); }
 }
@@ -696,7 +701,7 @@ pub fn run() {
             set_ignore_mouse, resize_prompter,
             toggle_prompter, is_prompter_visible, resize_settings,
             quit_app, open_devtools,
-            hide_settings, start_drag,
+            hide_settings, start_drag, relay_shortcut,
             set_movable, move_window, get_window_pos,
             open_url, open_settings,
             focus_prompter, elevate_notch_window,

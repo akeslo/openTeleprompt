@@ -39,10 +39,9 @@ export function createMicEngine({ onSpeaking, onSilence, onError, threshold }) {
 
   async function start(micDeviceId) {
     const audioConstraints = {
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: true,
-      suppressLocalAudioPlayback: true,
+      echoCancellation: false,
+      noiseSuppression: false,
+      autoGainControl: false,
     }
     const deviceId = micDeviceId && micDeviceId !== 'default' ? micDeviceId : undefined
     if (deviceId) audioConstraints.deviceId = { exact: deviceId }

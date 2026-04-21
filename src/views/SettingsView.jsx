@@ -17,7 +17,7 @@ const API = {
   quit:                () => tauriInvoke('quit_app'),
   openDevTools:        () => tauriInvoke('open_devtools'),
   hideSettings:        () => tauriInvoke('hide_settings'),
-  emitShortcut:        (action) => tauriEmit('shortcut', action),
+  emitShortcut:        (action) => tauriInvoke('relay_shortcut', { action }),
   emitCueJump:         (cueId) => tauriEmit('cue-jump', { cueId }),
 }
 
