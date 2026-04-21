@@ -3,40 +3,40 @@
   --bg:              #000000;
   --bg-secondary:    rgba(255,255,255,0.06);
   --bg-hover:        rgba(255,255,255,0.10);
-  --bg-active:       rgba(129,140,248,0.20);
+  --bg-active:       rgba(255,255,255,0.15);
   --bg-toolbar:      rgba(255,255,255,0.04);
   --border:          rgba(255,255,255,0.06);
   --text-primary:    rgba(255,255,255,0.85);
   --text-secondary:  rgba(255,255,255,0.40);
   --text-muted:      rgba(255,255,255,0.20);
   --text-label:      rgba(255,255,255,0.35);
-  --accent:          #818cf8;
-  --accent-bg:       rgba(129,140,248,0.20);
+  --accent:          #ffffff;
+  --accent-bg:       rgba(255,255,255,0.15);
   --inset-glow:      rgba(255,255,255,0.06);
   --inset-border:    rgba(255,255,255,0.04);
   --read-controls-bg: linear-gradient(to top, rgba(17,17,17,0.99) 70%, transparent);
   --script-text:     rgba(255,255,255,0.92);
-  --caret:           #818cf8;
+  --caret:           #ffffff;
 }
 
 [data-theme="light"] {
   --bg:              #f0f0f0;
   --bg-secondary:    rgba(0,0,0,0.06);
   --bg-hover:        rgba(0,0,0,0.10);
-  --bg-active:       rgba(99,102,241,0.15);
+  --bg-active:       rgba(255,255,255,0.15);
   --bg-toolbar:      rgba(0,0,0,0.03);
   --border:          rgba(0,0,0,0.08);
   --text-primary:    rgba(0,0,0,0.82);
   --text-secondary:  rgba(0,0,0,0.45);
   --text-muted:      rgba(0,0,0,0.25);
   --text-label:      rgba(0,0,0,0.35);
-  --accent:          #6366f1;
-  --accent-bg:       rgba(99,102,241,0.15);
+  --accent:          #ffffff;
+  --accent-bg:       rgba(255,255,255,0.15);
   --inset-glow:      rgba(0,0,0,0.04);
   --inset-border:    rgba(0,0,0,0.06);
   --read-controls-bg: linear-gradient(to top, rgba(230,230,230,0.99) 70%, transparent);
   --script-text:     rgba(0,0,0,0.88);
-  --caret:           #6366f1;
+  --caret:           #ffffff;
 }
 
 /* ── Reset ────────────────────────────────────────────────── */
@@ -46,7 +46,7 @@ html, body, #root {
   width: 100%; height: 100%;
   overflow: hidden;
   background: transparent;
-  font-family: 'Syne', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   /* Notch mode: transparent area must never block clicks.
      Only #island itself gets pointer-events. */
@@ -182,6 +182,9 @@ body.mode-classic #island {
     height        0.4s cubic-bezier(0.32, 0.72, 0, 1),
     border-radius 0.4s cubic-bezier(0.32, 0.72, 0, 1),
     box-shadow    0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+body.mode-classic #island {
+  background: #0f0f11;
 }
 body.mode-classic #island:not(.state-edit):not(.state-read):hover {
   width: 180px;
@@ -391,7 +394,7 @@ body.mode-classic .idle-chevron {
 .script-item.active { background: var(--bg-active); }
 .script-name {
   font-size: 10px; color: var(--text-secondary);
-  font-family: 'DM Mono', monospace;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
   max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .script-del {
@@ -405,14 +408,14 @@ body.mode-classic .idle-chevron {
   flex: 1; background: transparent; border: none;
   outline: none; resize: none;
   padding: 4px 16px 12px;
-  font-family: 'DM Mono', monospace; font-size: 13px;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 13px;
   line-height: 1.7; color: rgba(255,255,255,0.85);
-  caret-color: #818cf8;
+  caret-color: #ffffff;
 }
 #script-input::placeholder { color: rgba(255,255,255,0.2); }
 #script-stats {
   padding: 4px 16px 8px;
-  font-family: 'DM Mono', monospace; font-size: 10px;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px;
   color: var(--text-muted);
   display: flex; gap: 10px; flex-shrink: 0;
 }
@@ -421,7 +424,7 @@ body.mode-classic .idle-chevron {
 #progress-bar {
   position: absolute; top: 0; left: 0;
   height: 2px; width: 0%;
-  background: linear-gradient(to right, #818cf8, #22c55e);
+  background: linear-gradient(to right, #ffffff, #22c55e);
   border-radius: 0 2px 2px 0; z-index: 10;
   transition: width 0.1s linear;
 }
@@ -450,7 +453,7 @@ body.mode-classic .idle-chevron {
 #scroll-viewport::-webkit-scrollbar { display: none; }
 #script-text {
   padding: 35px 20px 60px;
-  font-family: 'Syne', sans-serif; font-size: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 16px;
   font-weight: 500; line-height: 1.6;
   color: var(--script-text); will-change: transform;
 }
@@ -474,7 +477,7 @@ body.mode-classic .idle-chevron {
 #vol-label {
   font-size: 8px; color: var(--text-muted);
   min-width: 34px; text-align: right;
-  font-family: 'DM Mono', monospace;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
 }
 #read-controls {
   position: absolute; bottom: 0; left: 0; right: 0; height: 36px;
@@ -507,14 +510,14 @@ body.mode-classic .idle-chevron {
   color: var(--text-muted); letter-spacing: 0.04em;
 }
 .ctrl-btn {
-  background: var(--bg-secondary); border: none;
-  color: var(--text-secondary); border-radius: 6px;
+  background: #27272a; border: none;
+  color: rgba(255,255,255,0.7); border-radius: 6px;
   width: 22px; height: 22px; font-size: 10px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: background 0.12s, color 0.12s;
   font-family: inherit; flex-shrink: 0;
 }
-.ctrl-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.ctrl-btn:hover { background: #3f3f46; color: #fff; }
 #speed-val {
   font-size: 10px; font-weight: 700;
   color: var(--text-muted);
@@ -525,16 +528,16 @@ body.mode-classic .idle-chevron {
 .pill-btn {
   border: none; cursor: pointer; border-radius: 8px;
   padding: 5px 12px;
-  font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 700;
   letter-spacing: 0.04em;
   transition: opacity 0.15s, background 0.15s;
 }
 .pill-btn.ghost {
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
+  background: #27272a;
+  color: rgba(255,255,255,0.7);
 }
-.pill-btn.ghost:hover { background: var(--bg-hover); color: var(--text-primary); }
-.pill-btn.accent { background: var(--accent); color: #fff; }
+.pill-btn.ghost:hover { background: #3f3f46; color: #fff; }
+.pill-btn.accent { background: #fff; color: #000; }
 .pill-btn.accent:hover { opacity: 0.85; }
 .pill-btn.icon-btn { padding: 5px 8px; display: flex; align-items: center; justify-content: center; }
 
@@ -558,8 +561,8 @@ body.mode-classic .idle-chevron {
   transition: background 0.15s, color 0.15s;
 }
 .tb-btn:hover, .tb-btn.active {
-  background: var(--accent-bg);
-  color: var(--accent);
+  background: rgba(255,255,255,0.12);
+  color: #fff;
 }
 .tb-color {
   width: 13px; height: 13px;
@@ -575,7 +578,7 @@ body.mode-classic .idle-chevron {
   padding: 1px 6px;
   border-radius: 4px;
   font-size: 9px;
-  font-family: 'DM Mono', monospace;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
   color: #facc15;
   background: rgba(250,204,21,0.1);
   border: 1px solid rgba(250,204,21,0.2);
@@ -594,7 +597,7 @@ body.mode-classic .idle-chevron {
 .tiptap-editor {
   outline: none;
   padding: 4px 16px 12px;
-  font-family: 'DM Mono', monospace;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
   font-size: 13px;
   line-height: 1.7;
   color: var(--text-primary);
@@ -634,7 +637,7 @@ body.mode-classic .idle-chevron {
   border-radius: 10px;
   padding: 10px 12px;
   z-index: 99999;
-  font-family: 'DM Mono', monospace;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
   font-size: 11px;
   color: rgba(255,255,255,0.7);
   backdrop-filter: blur(12px);
@@ -648,7 +651,7 @@ body.mode-classic .idle-chevron {
   font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.12em;
-  color: #818cf8;
+  color: #ffffff;
   margin-bottom: 2px;
 }
 .dev-row {
@@ -662,12 +665,28 @@ body.mode-classic .idle-chevron {
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 5px;
   color: rgba(255,255,255,0.85);
-  font-family: 'DM Mono', monospace;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
   font-size: 11px;
   padding: 2px 6px;
   cursor: pointer;
   outline: none;
 }
 .dev-row select:hover {
-  border-color: rgba(129,140,248,0.5);
+  border-color: rgba(255,255,255,0.3);
+}
+
+/* ── Read mode headings ───────────────────────────────────── */
+.read-heading {
+  display: block;
+  font-weight: 700;
+  margin: 10px 0 4px;
+  line-height: 1.3;
+}
+.read-heading-1 {
+  font-size: 1.25em;
+  color: var(--text-primary);
+}
+.read-heading-2 {
+  font-size: 1.05em;
+  color: var(--text-secondary);
 }
