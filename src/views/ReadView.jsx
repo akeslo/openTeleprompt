@@ -276,7 +276,10 @@ export default function ReadView() {
           style={{ fontSize: `${fontSize}px` }}
         >
           {tokens.length > 0 ? tokens.map((token, i) => {
-            if (token.type === 'newline') return <br key={i} />
+            if (token.type === 'newline') {
+              if (tokens[i - 1]?.type === 'heading') return null
+              return <br key={i} />
+            }
             if (token.type === 'heading') return (
               <div
                 key={i}
