@@ -126,7 +126,7 @@ pub struct Script {
 pub struct AppState {
     config:      Mutex<Config>,
     classic_pos: Mutex<Option<(f64, f64)>>,
-
+    passthrough: AtomicBool,
 }
 
 // ── File paths ─────────────────────────────────────────────
@@ -342,10 +342,10 @@ fn save_scripts(scripts: Vec<Script>) { save_scripts_to_disk(&scripts); }
 
 #[tauri::command]
 fn set_ignore_mouse(app: AppHandle, state: State<AppState>, ignore: bool) -> Result<(), String> {
-    // Never enable click-through in classic mode — buttons must be clickable
     let cfg = state.config.lock().unwrap();
     let is_classic = cfg.mode == "classic";
     drop(cfg);
+    if !ignore { state.passthrough.store(false, Ordering::Relaxed); }
     if let Some(w) = get_prompter(&app) {
         let effective = if is_classic { false } else { ignore };
         w.set_ignore_cursor_events(effective).map_err(|e| e.to_string())?;
@@ -528,6 +528,19 @@ fn relay_shortcut(app: AppHandle, action: String) {
 }
 
 #[tauri::command]
+fn toggle_passthrough(app: AppHandle, state: State<AppState>) -> bool {
+    let is_classic = state.config.lock().unwrap().mode == "classic";
+    let next = !state.passthrough.load(Ordering::Relaxed);
+    state.passthrough.store(next, Ordering::Relaxed);
+    if let Some(w) = get_prompter(&app) {
+        let effective = if is_classic { false } else { next };
+        let _ = w.set_ignore_cursor_events(effective);
+    }
+    let _ = app.emit_to("prompter", "passthrough-changed", next);
+    next
+}
+
+#[tauri::command]
 fn hide_settings(app: AppHandle) {
     if let Some(w) = get_settings(&app) { let _ = w.hide(); }
 }
@@ -687,7 +700,7 @@ pub fn run() {
     let state  = AppState {
         config:      Mutex::new(config),
         classic_pos: Mutex::new(None),
-
+        passthrough: AtomicBool::new(false),
     };
 
     tauri::Builder::default()
@@ -702,7 +715,7 @@ pub fn run() {
             set_ignore_mouse, resize_prompter,
             toggle_prompter, is_prompter_visible, resize_settings,
             quit_app, open_devtools,
-            hide_settings, start_drag, relay_shortcut,
+            hide_settings, start_drag, relay_shortcut, toggle_passthrough,
             set_movable, move_window, get_window_pos,
             open_url, open_settings,
             focus_prompter, elevate_notch_window,
@@ -833,15 +846,31 @@ pub fn run() {
             for sc in shortcuts {
                 let _ = app_handle.global_shortcut().on_shortcut(sc, move |app, shortcut, event| {
                     if event.state() != ShortcutState::Pressed { return; }
-                    let action = match shortcut.key {
-                        Code::Space     => "pause",
-                        Code::ArrowUp   => "faster",
-                        Code::ArrowDown => "slower",
-                        Code::KeyR      => "reset",
-                        Code::KeyT      => "passthrough",
-                        _ => return,
-                    };
-                    let _ = app.emit_to("prompter", "shortcut", action);
+                    match shortcut.key {
+                        Code::KeyT => {
+                            // Toggle passthrough in Rust — works even when JS ignores mouse events
+                            if let Some(st) = app.try_state::<AppState>() {
+                                let is_classic = st.config.lock().unwrap().mode == "classic";
+                                let next = !st.passthrough.load(Ordering::Relaxed);
+                                st.passthrough.store(next, Ordering::Relaxed);
+                                if let Some(w) = get_prompter(app) {
+                                    let effective = if is_classic { false } else { next };
+                                    let _ = w.set_ignore_cursor_events(effective);
+                                }
+                                let _ = app.emit_to("prompter", "passthrough-changed", next);
+                            }
+                        }
+                        _ => {
+                            let action = match shortcut.key {
+                                Code::Space     => "pause",
+                                Code::ArrowUp   => "faster",
+                                Code::ArrowDown => "slower",
+                                Code::KeyR      => "reset",
+                                _ => return,
+                            };
+                            let _ = app.emit_to("prompter", "shortcut", action);
+                        }
+                    }
                 });
             }
 

@@ -22,4 +22,5 @@ export const API = {
   focusPrompter: () => tauriInvoke('focus_prompter'),
   openFile: () => tauriInvoke('open_file'),
   saveFile: (path, content) => tauriInvoke('save_file', { path, content }),
+  togglePassThrough: () => tauriInvoke('toggle_passthrough'),
 }

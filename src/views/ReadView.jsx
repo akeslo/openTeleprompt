@@ -180,7 +180,12 @@ export default function ReadView() {
     micEngineRef.current = engine
     engine.start(configRef.current.micDeviceId)
 
-    let unlistenShortcut, unlistenCueJump
+    let unlistenShortcut, unlistenCueJump, unlistenPassthrough
+
+    window.__TAURI__?.event?.listen('passthrough-changed', (e) => {
+      isPassThroughRef.current = e.payload
+      setIsPassThrough(e.payload)
+    }).then(fn => { unlistenPassthrough = fn })
 
     API.onShortcut((action) => {
       if (action === 'pause') togglePause()
@@ -204,6 +209,7 @@ export default function ReadView() {
       micEngineRef.current?.stop()
       unlistenShortcut?.()
       unlistenCueJump?.()
+      unlistenPassthrough?.()
       emitScrollProgress(false)
     }
   }, [])
@@ -238,10 +244,7 @@ export default function ReadView() {
   }
 
   function togglePassThrough() {
-    const next = !isPassThroughRef.current
-    isPassThroughRef.current = next
-    setIsPassThrough(next)
-    API.setIgnoreMouse(next)
+    API.togglePassThrough()
   }
 
   function handleWheel(e) {

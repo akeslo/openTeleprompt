@@ -11,6 +11,7 @@ const API = {
   onConfigUpdate:      (cb) => tauriListen('config-update', (e) => cb(e.payload)),
   onActiveScript:      (cb) => tauriListen('active-script', (e) => cb(e.payload)),
   onScrollProgress:    (cb) => tauriListen('scroll-progress', (e) => cb(e.payload)),
+  togglePassThrough:   () => tauriInvoke('toggle_passthrough'),
   togglePrompter:      () => tauriInvoke('toggle_prompter'),
   isPrompterVisible:   () => tauriInvoke('is_prompter_visible'),
   resizeSettings:      (dims) => tauriInvoke('resize_settings', { dims }),
@@ -42,8 +43,9 @@ export default function SettingsView() {
   const [isPaused,   setIsPaused]   = useState(false)
   const [scrollPct,  setScrollPct]  = useState(0)
   const [activeCues, setActiveCues] = useState([])
-  const [micDeviceId,  setMicDeviceId]  = useState('default')
-  const [micDevices,   setMicDevices]   = useState([])
+  const [micDeviceId,   setMicDeviceId]  = useState('default')
+  const [micDevices,    setMicDevices]   = useState([])
+  const [isPassThrough, setIsPassThrough] = useState(false)
 
   const panelRef = useRef(null)
 
@@ -66,7 +68,10 @@ export default function SettingsView() {
       .then(devs => setMicDevices(devs.filter(d => d.kind === 'audioinput')))
       .catch(() => {})
 
-    let unlistenConfig, unlistenActiveScript, unlistenScrollProgress
+    let unlistenConfig, unlistenActiveScript, unlistenScrollProgress, unlistenPassthrough
+
+    tauriListen('passthrough-changed', (e) => setIsPassThrough(e.payload))
+      .then(fn => { unlistenPassthrough = fn })
 
     API.onConfigUpdate(applyConfig).then(fn => { unlistenConfig = fn })
 
@@ -89,6 +94,7 @@ export default function SettingsView() {
       unlistenConfig?.()
       unlistenActiveScript?.()
       unlistenScrollProgress?.()
+      unlistenPassthrough?.()
       document.removeEventListener('keydown', handler)
     }
   }, [])
@@ -124,6 +130,12 @@ export default function SettingsView() {
           >
             {prompterVisible ? 'Hide' : 'Show'}
           </button>
+          <button
+            className="s-visibility-btn"
+            onClick={() => API.togglePassThrough()}
+            title="Toggle click-through (⌘⇧T)"
+            style={isPassThrough ? { background: '#f59e0b', color: '#000' } : {}}
+          >⊙</button>
           <button className="s-quit-btn" onClick={() => API.quit()} title="Quit Teleprompt">
             Quit
           </button>
