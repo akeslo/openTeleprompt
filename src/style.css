@@ -453,7 +453,7 @@ body.mode-classic .idle-chevron {
 #scroll-viewport::-webkit-scrollbar { display: none; }
 #script-text {
   padding: 35px 20px 60px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
   font-weight: 500; line-height: 1.6;
   color: var(--script-text); will-change: transform;
 }
@@ -657,14 +657,19 @@ body.mode-classic .idle-chevron {
 .read-heading {
   display: block;
   font-weight: 700;
-  margin: 10px 0 4px;
-  line-height: 1.3;
+  margin: 14px 0 4px;
+  line-height: 1.25;
 }
 .read-heading-1 {
-  font-size: 1.25em;
+  font-size: 1.6em;
   color: var(--text-primary);
 }
 .read-heading-2 {
+  font-size: 1.25em;
+  color: var(--text-secondary);
+}
+.read-heading-3 {
   font-size: 1.05em;
   color: var(--text-secondary);
+  font-weight: 600;
 }

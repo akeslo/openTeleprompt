@@ -72,6 +72,7 @@ export default function ReadView() {
       , 0)
       setSpeedIdx(i)
     }
+    if (config.fontSize) setFontSize(config.fontSize)
     micEngineRef.current?.setThreshold(config.threshold)
     if (prevMicDeviceIdRef.current !== config.micDeviceId) {
       prevMicDeviceIdRef.current = config.micDeviceId
@@ -85,7 +86,7 @@ export default function ReadView() {
       micEngineRef.current = engine
       engine.start(config.micDeviceId)
     }
-  }, [config.threshold, config.micDeviceId, config.autoScroll, config.scrollSpeed])
+  }, [config.threshold, config.micDeviceId, config.autoScroll, config.scrollSpeed, config.fontSize])
 
   useEffect(() => {
     if (startCueId >= 0) {
