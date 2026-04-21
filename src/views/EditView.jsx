@@ -1,10 +1,11 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
 import { useAppStore } from '../store'
 import { API } from '../lib/api'
+import { extractCues } from '../lib/tokenizer'
 
 const COLORS = [
   { label: 'White',  value: '#ffffff' },
@@ -23,6 +24,11 @@ function computeStats(text) {
   return `${words} words · ~${timeStr} at 130 WPM`
 }
 
+function emitActiveScript(doc) {
+  const cues = extractCues(doc)
+  window.__TAURI__?.event?.emit('active-script', { doc, cues })
+}
+
 export default function EditView() {
   const {
     setView, scripts, setScripts,
@@ -32,6 +38,7 @@ export default function EditView() {
 
   const isClassic = config?.mode === 'classic'
   const [stats, setStats] = useState('')
+  const emitDebounceRef = useRef(null)
 
   const editor = useEditor({
     extensions: [StarterKit, TextStyle, Color],
@@ -41,6 +48,10 @@ export default function EditView() {
     },
     onUpdate({ editor }) {
       setStats(computeStats(editor.getText()))
+      clearTimeout(emitDebounceRef.current)
+      emitDebounceRef.current = setTimeout(() => {
+        emitActiveScript(editor.getJSON())
+      }, 300)
     },
   })
 
@@ -55,6 +66,7 @@ export default function EditView() {
       editor.commands.setContent(`<p>${script.text || ''}</p>`)
     }
     setStats(computeStats(script.text || ''))
+    emitActiveScript(editor.getJSON())
   }, [editor])
 
   const saveCurrentScript = useCallback(() => {
@@ -108,6 +120,7 @@ export default function EditView() {
     }
     setStats(computeStats(script.text || ''))
     editor.commands.focus()
+    emitActiveScript(editor.getJSON())
   }
 
   function deleteScript(e, i) {
