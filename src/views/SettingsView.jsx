@@ -1,8 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import { TextStyle } from '@tiptap/extension-text-style'
-import { Color } from '@tiptap/extension-color'
 
 const tauriInvoke = window.__TAURI__?.core?.invoke ?? (() => Promise.resolve(null))
 const tauriListen = window.__TAURI__?.event?.listen ?? (() => Promise.resolve(() => {}))
@@ -27,7 +23,7 @@ const API = {
 const SPEEDS = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
 
 const Icons = {
-  Prompter: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>,
+  Prompter: <img src="/tray-icon.png" width="16" height="16" alt="" style={{ display: 'block', imageRendering: '-webkit-optimize-contrast' }} />,
   Reset: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>,
   Pause: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>,
   Play:  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 14V3z"/></svg>,
@@ -38,21 +34,14 @@ export default function SettingsView() {
   const [mode,         setMode]         = useState('notch')
   const [speedIdx,     setSpeedIdx]     = useState(3)
   const [fontSize,     setFontSize]     = useState(22)
-  const [eyeLineGuide, setEyeLineGuide] = useState(false)
+  const [eyeLineGuide,     setEyeLineGuide]     = useState(false)
+  const [screenshareHidden, setScreenshareHidden] = useState(true)
   const [isRunning,  setIsRunning]  = useState(false)
   const [isPaused,   setIsPaused]   = useState(false)
   const [scrollPct,  setScrollPct]  = useState(0)
   const [activeCues, setActiveCues] = useState([])
 
   const panelRef = useRef(null)
-
-  const previewEditor = useEditor({
-    extensions: [StarterKit, TextStyle, Color],
-    editable: false,
-    content: '<p style="color:#52525b">No active script — open a script in the prompter.</p>',
-  })
-  const previewEditorRef = useRef(previewEditor)
-  useEffect(() => { previewEditorRef.current = previewEditor }, [previewEditor])
 
   useEffect(() => {
     if (!panelRef.current) return
@@ -71,9 +60,8 @@ export default function SettingsView() {
 
     API.onConfigUpdate(applyConfig).then(fn => { unlistenConfig = fn })
 
-    API.onActiveScript(({ doc, cues }) => {
+    API.onActiveScript(({ cues }) => {
       setActiveCues(cues ?? [])
-      if (previewEditorRef.current && doc) previewEditorRef.current.commands.setContent(doc)
     }).then(fn => { unlistenActiveScript = fn })
 
     API.onScrollProgress(({ pct, isRunning, isPaused }) => {
@@ -98,7 +86,8 @@ export default function SettingsView() {
   function applyConfig(c) {
     if (c.mode)         setMode(c.mode)
     if (c.fontSize)     setFontSize(c.fontSize)
-    if (c.eyeLineGuide != null) setEyeLineGuide(c.eyeLineGuide)
+    if (c.eyeLineGuide     != null) setEyeLineGuide(c.eyeLineGuide)
+    if (c.screenshareHidden != null) setScreenshareHidden(c.screenshareHidden)
     if (c.scrollSpeed != null) {
       const i = SPEEDS.indexOf(c.scrollSpeed)
       setSpeedIdx(i !== -1 ? i : 3)
@@ -132,13 +121,6 @@ export default function SettingsView() {
       <div className="s-body">
         {activeTab === 'Prompter' && (
           <>
-            <div className="s-section-label">PREVIEW</div>
-            <div className="s-preview-box">
-              <div className="s-preview-editor">
-                <EditorContent editor={previewEditor} />
-              </div>
-            </div>
-
             <div className="s-progress-row">
               <div className="s-progress-track">
                 <div className="s-progress-fill" style={{ width: `${scrollPct * 100}%`, transition: 'width 0.1s linear' }} />
@@ -220,6 +202,17 @@ export default function SettingsView() {
               <Toggle checked={eyeLineGuide} onChange={v => {
                 setEyeLineGuide(v)
                 setConfig({ eyeLineGuide: v })
+              }} />
+            </div>
+
+            <div className="s-setting-row s-flex-row">
+              <div className="s-row-left">
+                <span className="s-label">Hide from screen capture</span>
+                <span className="s-sublabel">Exclude window from screenshots &amp; screen share</span>
+              </div>
+              <Toggle checked={screenshareHidden} onChange={v => {
+                setScreenshareHidden(v)
+                setConfig({ screenshareHidden: v })
               }} />
             </div>
 

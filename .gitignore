@@ -27,7 +27,6 @@ dist-ssr
 src-tauri/target/
 
 # Old Vite files (not needed)
-public/
 vite.config.ts
 tsconfig.json
 tsconfig.node.json

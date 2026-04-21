@@ -1,7 +1,7 @@
 :root {
-  --s-bg: #0f0f11;
-  --s-header-bg: #0f0f11;
-  --s-card-bg: #1a1a1c;
+  --s-bg: #000000;
+  --s-header-bg: #000000;
+  --s-card-bg: #111113;
   --s-border: rgba(255,255,255,0.06);
   --s-text: rgba(255,255,255,0.85);
   --s-label: rgba(255,255,255,0.85);
@@ -47,7 +47,7 @@ body {
   padding: 16px 16px 12px;
 }
 .s-header-left { display: flex; align-items: center; gap: 8px; }
-.s-app-icon { background: #fff; color: #000; border-radius: 4px; padding: 3px; display: flex; }
+.s-app-icon { display: flex; align-items: center; justify-content: center; }
 .s-app-name { font-size: 14px; font-weight: 700; }
 .s-live-badge { 
   background: rgba(239,68,68,0.15); color: var(--s-live); 
