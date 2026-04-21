@@ -23,9 +23,12 @@ const CLASSIC_SIZES = {
 }
 
 export default function App() {
-  const { view, config, setConfig, setScripts, setView } = useAppStore()
+  const { view, config, setConfig, setScripts, setView, setStartCueId, setScriptText, setScriptDoc } = useAppStore()
   const [isHovered, setIsHovered] = useState(false)
   const isClassic = config.mode === 'classic'
+
+  const viewRef = useRef(view)
+  useEffect(() => { viewRef.current = view }, [view])
 
   // ── Bootstrap ──────────────────────────────────────────────
   useEffect(() => {
@@ -33,14 +36,17 @@ export default function App() {
     API.getConfig().then((cfg) => {
       if (!cfg) return
       setConfig({
-        mode:        cfg.mode        ?? 'notch',
-        theme:       cfg.theme       ?? 'dark',
-        scrollSpeed: cfg.scrollSpeed ?? cfg.scroll_speed ?? 1,
-        fontSize:    cfg.fontSize    ?? cfg.font_size    ?? 16,
-        opacity:     cfg.opacity     ?? 1,
-        threshold:   cfg.threshold   ?? 0.018,
-        autoScroll:  cfg.autoScroll  ?? cfg.auto_scroll  ?? false,
-        micDeviceId: cfg.micDeviceId ?? cfg.mic_device_id ?? 'default',
+        mode:         cfg.mode         ?? 'notch',
+        theme:        cfg.theme        ?? 'dark',
+        scrollSpeed:  cfg.scrollSpeed  ?? cfg.scroll_speed  ?? 1,
+        fontSize:     cfg.fontSize     ?? cfg.font_size     ?? 24,
+        textAlign:    cfg.textAlign    ?? cfg.text_align    ?? 'center',
+        mirrorText:   cfg.mirrorText   ?? cfg.mirror_text   ?? false,
+        eyeLineGuide: cfg.eyeLineGuide ?? cfg.eye_line_guide ?? false,
+        opacity:      cfg.opacity      ?? 1,
+        threshold:    cfg.threshold    ?? 0.018,
+        autoScroll:   cfg.autoScroll   ?? cfg.auto_scroll   ?? false,
+        micDeviceId:  cfg.micDeviceId  ?? cfg.mic_device_id ?? 'default',
       })
       API.setIgnoreMouse(false)
     })
@@ -49,24 +55,47 @@ export default function App() {
     API.getScripts().then((s) => { if (s) setScripts(s) })
 
     // Live config updates from settings window
+    let unlistenConfig, unlistenCueJump
+
     API.onConfigUpdate((cfg) => {
       if (!cfg) return
       const patch = {}
       const keys = ['mode','theme','scrollSpeed','scroll_speed','opacity','threshold',
-                    'autoScroll','auto_scroll','micDeviceId','mic_device_id','fontSize','font_size']
+                    'autoScroll','auto_scroll','micDeviceId','mic_device_id','fontSize','font_size','textAlign','text_align',
+                    'mirrorText','mirror_text','eyeLineGuide','eye_line_guide']
       keys.forEach(k => { if (cfg[k] !== undefined) patch[k] = cfg[k] })
-      // Normalise snake_case → camelCase
       if (patch.scroll_speed  !== undefined) { patch.scrollSpeed  = patch.scroll_speed;  delete patch.scroll_speed }
       if (patch.auto_scroll   !== undefined) { patch.autoScroll   = patch.auto_scroll;   delete patch.auto_scroll  }
       if (patch.mic_device_id !== undefined) { patch.micDeviceId  = patch.mic_device_id; delete patch.mic_device_id }
       if (patch.font_size     !== undefined) { patch.fontSize     = patch.font_size;     delete patch.font_size     }
+      if (patch.text_align    !== undefined) { patch.textAlign    = patch.text_align;    delete patch.text_align    }
+      if (patch.mirror_text   !== undefined) { patch.mirrorText   = patch.mirror_text;   delete patch.mirror_text   }
+      if (patch.eye_line_guide !== undefined) { patch.eyeLineGuide = patch.eye_line_guide; delete patch.eye_line_guide }
       if (Object.keys(patch).length) setConfig(patch)
-    })
+    }).then(fn => { unlistenConfig = fn })
+
+    window.__TAURI__?.event?.listen('cue-jump', (e) => {
+      if (viewRef.current === 'read') return
+      const { cueId } = e.payload
+      const state = useAppStore.getState()
+      if (!state.scriptDoc) {
+        const idx = state.currentScriptIndex
+        const script = idx >= 0 ? state.scripts[idx] : state.scripts[0]
+        if (!script) { setView('edit'); return }
+        state.setScriptText(script.text || '')
+        try { state.setScriptDoc(JSON.parse(script.content)) }
+        catch { state.setScriptDoc(null) }
+      }
+      setStartCueId(cueId)
+      setView('read')
+    }).then(fn => { unlistenCueJump = fn })
 
     // Probe mic permission once so browser doesn't ask mid-session
     navigator.mediaDevices?.getUserMedia({ audio: true })
       .then(s => s.getTracks().forEach(t => t.stop()))
       .catch(() => {})
+
+    return () => { unlistenConfig?.(); unlistenCueJump?.() }
   }, [])
 
   // ── Side-effects from config ───────────────────────────────
