@@ -54,7 +54,7 @@ export default function ReadView() {
   function seekToCue(cueId) {
     const el = headingRefs.current[cueId]
     if (!el || !scrollVPRef.current || !scriptTextRef.current) return
-    const maxScroll = scriptTextRef.current.scrollHeight - scrollVPRef.current.clientHeight
+    const maxScroll = Math.max(0, scriptTextRef.current.scrollHeight - scrollVPRef.current.clientHeight)
     scrollPosRef.current = Math.min(el.offsetTop, maxScroll)
     if (scriptTextRef.current) {
       scriptTextRef.current.style.transform = `translateY(${-scrollPosRef.current}px)`
