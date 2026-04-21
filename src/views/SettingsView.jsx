@@ -132,32 +132,25 @@ export default function SettingsView() {
 
       <div className="s-body">
         <>
-            <div className="s-progress-row">
-              <div className="s-progress-track">
-                <div className="s-progress-fill" style={{ width: `${scrollPct * 100}%`, transition: 'width 0.1s linear' }} />
-              </div>
-            </div>
+            {isRunning && (
+              <>
+                <div className="s-progress-row">
+                  <div className="s-progress-track">
+                    <div className="s-progress-fill" style={{ width: `${scrollPct * 100}%`, transition: 'width 0.1s linear' }} />
+                  </div>
+                </div>
 
-            <div className="s-controls-main">
-              <button
-                className="s-btn-pause"
-                onClick={() => API.emitShortcut('pause')}
-                disabled={!isRunning}
-                style={{ opacity: isRunning ? 1 : 0.4, cursor: isRunning ? 'pointer' : 'default' }}
-              >
-                {isPaused ? Icons.Play : Icons.Pause}
-                {isPaused ? 'Resume' : 'Pause'}
-              </button>
-              <button
-                className="s-btn-reset"
-                onClick={() => API.emitShortcut('reset')}
-                disabled={!isRunning}
-                style={{ opacity: isRunning ? 1 : 0.4, cursor: isRunning ? 'pointer' : 'default' }}
-                title="Reset to beginning"
-              >
-                {Icons.Reset}
-              </button>
-            </div>
+                <div className="s-controls-main">
+                  <button className="s-btn-pause" onClick={() => API.emitShortcut('pause')}>
+                    {isPaused ? Icons.Play : Icons.Pause}
+                    {isPaused ? 'Resume' : 'Pause'}
+                  </button>
+                  <button className="s-btn-reset" onClick={() => API.emitShortcut('reset')} title="Reset to beginning">
+                    {Icons.Reset}
+                  </button>
+                </div>
+              </>
+            )}
 
             <div className="s-setting-row">
               <div className="s-row-info">
