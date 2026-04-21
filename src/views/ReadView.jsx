@@ -243,7 +243,7 @@ export default function ReadView() {
             if (token.type === 'heading') return (
               <div
                 key={i}
-                ref={el => { headingRefs.current[token.id] = el }}
+                ref={el => { if (token.id !== null) headingRefs.current[token.id] = el }}
                 className={`read-heading read-heading-${token.level}`}
               >
                 {token.text}

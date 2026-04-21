@@ -51,6 +51,8 @@ export default function SettingsView() {
     editable: false,
     content: '<p style="color:#52525b">No active script — open a script in the prompter.</p>',
   })
+  const previewEditorRef = useRef(previewEditor)
+  useEffect(() => { previewEditorRef.current = previewEditor }, [previewEditor])
 
   useEffect(() => {
     if (!panelRef.current) return
@@ -71,7 +73,7 @@ export default function SettingsView() {
 
     API.onActiveScript(({ doc, cues }) => {
       setActiveCues(cues ?? [])
-      if (previewEditor && doc) previewEditor.commands.setContent(doc)
+      if (previewEditorRef.current && doc) previewEditorRef.current.commands.setContent(doc)
     }).then(fn => { unlistenActiveScript = fn })
 
     API.onScrollProgress(({ pct, isRunning, isPaused }) => {
@@ -91,7 +93,7 @@ export default function SettingsView() {
       unlistenScrollProgress?.()
       document.removeEventListener('keydown', handler)
     }
-  }, [previewEditor])
+  }, [])
 
   function applyConfig(c) {
     if (c.mode)         setMode(c.mode)
