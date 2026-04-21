@@ -35,7 +35,7 @@ export default function EditView() {
   const {
     setView, scripts, setScripts,
     currentScriptIndex, setCurrentScriptIndex,
-    setScriptText, setScriptDoc, config,
+    setScriptText, setScriptDoc, config, setConfig,
   } = useAppStore()
 
   const isClassic = config?.mode === 'classic'
@@ -232,6 +232,12 @@ export default function EditView() {
           title={isPassThrough ? 'Disable click-through' : 'Enable click-through'}
           aria-label="Toggle click-through"
         >⊙</button>
+        <button
+          className={`pill-btn ghost${config.autoScroll ? ' active' : ''}`}
+          onClick={() => { const v = !config.autoScroll; setConfig({ autoScroll: v }); API.setConfig({ autoScroll: v }) }}
+          title={config.autoScroll ? 'Auto-scroll on' : 'Voice-activated scroll'}
+          aria-label="Toggle auto-scroll"
+        >{config.autoScroll ? 'Auto' : 'Voice'}</button>
         <button className="pill-btn ghost" onClick={handleNew}>+ New</button>
         <button className="pill-btn ghost" onClick={handleOpenFile} disabled={isOpening} aria-label="Open file">
           {isOpening ? '…' : openError ? 'Error' : 'Open'}
