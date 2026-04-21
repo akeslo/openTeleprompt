@@ -40,6 +40,13 @@ export default function EditView() {
 
   const isClassic = config?.mode === 'classic'
   const [stats, setStats] = useState('')
+  const [isPassThrough, setIsPassThrough] = useState(false)
+
+  function togglePassThrough() {
+    const next = !isPassThrough
+    setIsPassThrough(next)
+    API.setIgnoreMouse(next)
+  }
   const [saveFlash, setSaveFlash] = useState(false)
   const [isOpening, setIsOpening] = useState(false)
   const [openError, setOpenError] = useState(null)
@@ -157,6 +164,7 @@ export default function EditView() {
   }
 
   function handleCollapse() {
+    setIsPassThrough(false)
     API.setIgnoreMouse(false)
     setView('idle')
   }
@@ -218,6 +226,12 @@ export default function EditView() {
       <div className="edit-header">
         <button className="pill-btn ghost" onClick={handleCollapse}>✕</button>
         <span className="view-title">Script</span>
+        <button
+          className={`pill-btn ghost icon-btn${isPassThrough ? ' active' : ''}`}
+          onClick={togglePassThrough}
+          title={isPassThrough ? 'Disable click-through' : 'Enable click-through'}
+          aria-label="Toggle click-through"
+        >⊙</button>
         <button className="pill-btn ghost" onClick={handleNew}>+ New</button>
         <button className="pill-btn ghost" onClick={handleOpenFile} disabled={isOpening} aria-label="Open file">
           {isOpening ? '…' : openError ? 'Error' : 'Open'}

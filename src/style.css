@@ -511,6 +511,7 @@ body.mode-classic .idle-chevron {
   color: rgba(255,255,255,0.7);
 }
 .pill-btn.ghost:hover { background: #3f3f46; color: #fff; }
+.pill-btn.ghost.active { background: #3f3f46; color: #fff; }
 .pill-btn.accent { background: #fff; color: #000; }
 .pill-btn.accent:hover { opacity: 0.85; }
 .pill-btn.icon-btn { padding: 5px 8px; display: flex; align-items: center; justify-content: center; }
