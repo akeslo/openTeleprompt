@@ -5,7 +5,7 @@ import { API } from '../lib/api'
 import { createMicEngine, SPEEDS, SCROLL_SPEED_BASE } from '../lib/mic'
 
 export default function ReadView() {
-  const { scriptText, scriptDoc, config, setView, startCueId, setStartCueId } = useAppStore()
+  const { scriptText, scriptDoc, config, setConfig, setView, startCueId, setStartCueId } = useAppStore()
   // tokenizeDoc walks the entire doc tree — memoize so it only runs when scriptDoc changes,
   // not on every isSpeaking/speedIdx/micStatus state update.
   const tokens = useMemo(() => scriptDoc ? tokenizeDoc(scriptDoc) : [], [scriptDoc])
@@ -18,7 +18,7 @@ export default function ReadView() {
   const [speedIdx,   setSpeedIdx]   = useState(
     SPEEDS.indexOf(config.scrollSpeed) !== -1 ? SPEEDS.indexOf(config.scrollSpeed) : 3
   )
-  const [fontSize,   setFontSize]   = useState(config.fontSize || 16)
+  const fontSize = config.fontSize || 24
   const [micStatus,  setMicStatus]  = useState('Waiting…')
 
   const isPausedRef        = useRef(false)
@@ -72,7 +72,6 @@ export default function ReadView() {
       , 0)
       setSpeedIdx(i)
     }
-    if (config.fontSize) setFontSize(config.fontSize)
     micEngineRef.current?.setThreshold(config.threshold)
     if (prevMicDeviceIdRef.current !== config.micDeviceId) {
       prevMicDeviceIdRef.current = config.micDeviceId
@@ -86,7 +85,7 @@ export default function ReadView() {
       micEngineRef.current = engine
       engine.start(config.micDeviceId)
     }
-  }, [config.threshold, config.micDeviceId, config.autoScroll, config.scrollSpeed, config.fontSize])
+  }, [config.threshold, config.micDeviceId, config.autoScroll, config.scrollSpeed])
 
   useEffect(() => {
     if (startCueId >= 0) {
@@ -283,8 +282,8 @@ export default function ReadView() {
           <span id="status-text">{micStatus}</span>
         </div>
         <div className="ctrl-right">
-          <button className="ctrl-btn" aria-label="Decrease font size" onClick={() => setFontSize(f => { const n = Math.max(11, f - 2); API.setConfig({ fontSize: n }); return n })}>A−</button>
-          <button className="ctrl-btn" aria-label="Increase font size" onClick={() => setFontSize(f => { const n = Math.min(32, f + 2); API.setConfig({ fontSize: n }); return n })}>A+</button>
+          <button className="ctrl-btn" aria-label="Decrease font size" onClick={() => { const n = Math.max(11, fontSize - 2); setConfig({ fontSize: n }); API.setConfig({ fontSize: n }) }}>A−</button>
+          <button className="ctrl-btn" aria-label="Increase font size" onClick={() => { const n = Math.min(64, fontSize + 2); setConfig({ fontSize: n }); API.setConfig({ fontSize: n }) }}>A+</button>
           <button className="ctrl-btn" aria-label="Decrease scroll speed" onClick={() => setSpeedIdx(i => { const n = Math.max(0, i - 1); API.setConfig({ scrollSpeed: SPEEDS[n] }); return n })}>−</button>
           <span id="speed-val" aria-label={`Speed ${SPEEDS[speedIdx]}x`}>{SPEEDS[speedIdx]}×</span>
           <button className="ctrl-btn" aria-label="Increase scroll speed" onClick={() => setSpeedIdx(i => { const n = Math.min(SPEEDS.length - 1, i + 1); API.setConfig({ scrollSpeed: SPEEDS[n] }); return n })}>+</button>

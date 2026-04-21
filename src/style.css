@@ -583,6 +583,9 @@ body.mode-classic .idle-chevron {
   min-height: 80px;
 }
 .tiptap-editor p { margin: 0 0 2px; }
+.tiptap-editor h1 { font-size: 1.5em; font-weight: 700; margin: 10px 0 2px; color: var(--text-primary); }
+.tiptap-editor h2 { font-size: 1.2em; font-weight: 700; margin: 8px 0 2px; color: var(--text-primary); }
+.tiptap-editor h3 { font-size: 1.05em; font-weight: 600; margin: 6px 0 2px; color: var(--text-secondary); }
 .tiptap-editor p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   color: var(--text-muted);
