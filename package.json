@@ -9,9 +9,7 @@
     "dev:react": "vite",
     "build": "tauri build",
     "build:frontend": "vite build",
-    "build:win": "tauri build --target x86_64-pc-windows-msvc",
-    "snap:save": "node scripts/snap.mjs save",
-    "snap:check": "node scripts/snap.mjs check"
+    "build:win": "tauri build --target x86_64-pc-windows-msvc"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",

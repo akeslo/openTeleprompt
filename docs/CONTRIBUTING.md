@@ -5,17 +5,16 @@ Thanks for your interest! Here's how to contribute.
 ## Ground rules
 
 - **No direct pushes to `main`** — all changes go through a Pull Request
-- Every PR requires **1 approving review** from [@ArunNGun](https://github.com/ArunNGun)
 - Keep PRs focused — one feature or fix per PR
 - Test on macOS before submitting
 
 ## Getting started
 
 ```bash
-git clone https://github.com/ArunNGun/openTeleprompt
+git clone https://github.com/your-username/openTeleprompt
 cd openTeleprompt
 npm install
-open node_modules/electron/dist/Electron.app --args "$(pwd)"
+npm run dev
 ```
 
 ## Submitting a PR

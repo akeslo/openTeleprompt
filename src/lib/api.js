@@ -2,7 +2,7 @@ const tauriInvoke = window.__TAURI__?.core?.invoke ?? (() => Promise.resolve(nul
 const tauriListen = window.__TAURI__?.event?.listen ?? (() => Promise.resolve(() => {}))
 
 export const API = {
-  elevateNotchWindow: () => invoke('elevate_notch_window'),
+  elevateNotchWindow: () => tauriInvoke('elevate_notch_window'),
   platform: navigator.platform.toLowerCase().includes('win') ? 'win32' : 'darwin',
   getConfig: () => tauriInvoke('get_config'),
   setConfig: (patch) => tauriInvoke('set_config', { patch }),

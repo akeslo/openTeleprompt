@@ -1,6 +1,6 @@
 # OpenTeleprompter
 
-A free, open source voice-activated teleprompter for **macOS** (Windows v3 coming soon).
+A free, open source voice-activated teleprompter for **macOS**.
 
 **Speak → it scrolls. Stop → it pauses. No subscriptions. No cloud. No accounts.**
 
@@ -8,13 +8,10 @@ A free, open source voice-activated teleprompter for **macOS** (Windows v3 comin
 
 ## Download — v3.0.0
 
-| Platform | Link | Notes |
-|---|---|---|
-| 🍎 Apple Silicon (M1–M4) | [Download .dmg](https://github.com/ArunNGun/openTeleprompt/releases/latest) | macOS 13+ |
-| 🍎 Intel Mac | [Download .dmg](https://github.com/ArunNGun/openTeleprompt/releases/latest) | macOS 13+ |
-| 🪟 Windows (x64) | [v2.2.1 stable](https://github.com/ArunNGun/openTeleprompt/releases/tag/v2.2.1) | v3 coming soon |
-
-**Landing page:** https://arunngun.github.io/openTeleprompt/
+| Platform | Notes |
+|---|---|
+| 🍎 Apple Silicon (M1–M4) | macOS 13+ |
+| 🍎 Intel Mac | macOS 13+ |
 
 ---
 
@@ -65,17 +62,7 @@ Clean React settings view with auto-height. All preferences in one place, persis
 - Dynamic Island with real concave corners + spring physics
 - Rich text editor (Tiptap), script library, light/dark theme
 - Live speed + font control while reading
-- Playwright visual test suite (16 tests, 48 state combos)
-- macOS only — Windows v3 in progress
-
-### v2.2.1 — Windows Polish
-- Platform-aware tray hint images (Mac + Windows)
-- Author GitHub link in settings
-
-### v2.2.0 — Windows Support
-- Full Windows support (Classic + Top Bar modes)
-- Native Windows settings panel (Fluent-style)
-- GitHub Actions CI — auto-builds Mac + Windows on tag push
+- macOS only
 
 ### v2.0.0 — Tauri/Rust Rewrite
 
@@ -91,16 +78,12 @@ Clean React settings view with auto-height. All preferences in one place, persis
 
 ```
 openTeleprompt/
-├── src-tauri/          ← Rust backend
-│   ├── src/lib.rs      ← All Tauri commands
-│   └── tauri.conf.json
-├── frontend/           ← React + Vite frontend
-│   └── src/            ← App.jsx, views, Zustand store
-├── index.html          ← Vite entry point
-├── settings.html       ← Settings panel entry
-├── .github/workflows/  ← CI — auto-builds macOS on release tag
-├── electron/           ← Legacy Electron v1.x (archived)
-└── docs/               ← GitHub Pages landing page
+├── src/                ← React UI (React 19, Vite, Zustand)
+├── src-tauri/          ← Rust Backend (Tauri 2.0)
+├── website/            ← The marketing landing page
+├── docs/               ← Project documentation (GEMINI.md, etc.)
+├── index.html          ← Entry point: Prompter
+└── settings.html       ← Entry point: Settings
 ```
 
 ---
@@ -115,10 +98,7 @@ npm install
 npm run dev
 
 # Production build — macOS
-npm run build
-
-# Production build — Windows
-npm run build:win
+./build_mac.sh
 ```
 
 **Requirements:** Rust + Cargo, Node.js 18+
@@ -136,14 +116,11 @@ xattr -cr /Applications/OpenTeleprompter.app
 ```
 This strips the macOS quarantine flag. One-time, you won't need it again.
 
-### Windows (v2.2.1)
-Run the `.exe` installer. If Windows SmartScreen blocks it, click **More info → Run anyway**.
-
 ---
 
 ## Contributing
 
-PRs welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
+PRs welcome! See [CONTRIBUTING.md](docs/CONTRIBUTING.md).
 
 ---
 

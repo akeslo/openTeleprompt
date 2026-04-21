@@ -80,25 +80,33 @@ pub struct Config {
     pub auto_scroll: bool,
     pub mic_device_id: String,
     pub theme: String,
+    #[serde(default)]
+    pub font_size: f64,
+    #[serde(default = "default_text_align")]
+    pub text_align: String,
+    #[serde(default)]
+    pub mirror_text: bool,
+    #[serde(default)]
+    pub eye_line_guide: bool,
 }
+
+fn default_text_align() -> String { "center".to_string() }
 
 impl Default for Config {
     fn default() -> Self {
-        // macOS: notch mode, Windows: classic mode
-        #[cfg(target_os = "windows")]
-        let default_mode = "classic".to_string();
-        #[cfg(not(target_os = "windows"))]
-        let default_mode = "notch".to_string();
-
         Self {
             scroll_speed: 1.0,
             threshold: 0.018,
-            screenshare_hidden: true,  // hide on screenshare: ON by default (both platforms)
-            mode: default_mode,
+            screenshare_hidden: true,
+            mode: "notch".to_string(),
             opacity: 1.0,
-            auto_scroll: true,         // voice input: ON by default (both platforms)
+            auto_scroll: true,
             mic_device_id: "default".to_string(),
             theme: "dark".to_string(),
+            font_size: 24.0,
+            text_align: "center".to_string(),
+            mirror_text: false,
+            eye_line_guide: false,
         }
     }
 }
@@ -124,17 +132,6 @@ fn config_path() -> PathBuf {
     dirs::home_dir().unwrap_or_default().join(".teleprompter-config.json")
 }
 
-fn first_launch_path() -> PathBuf {
-    dirs::home_dir().unwrap_or_default().join(".teleprompter-launched")
-}
-
-fn is_first_launch() -> bool {
-    !first_launch_path().exists()
-}
-
-fn mark_launched() {
-    let _ = fs::write(first_launch_path(), "1");
-}
 fn scripts_path() -> PathBuf {
     dirs::home_dir().unwrap_or_default().join(".teleprompter-scripts.json")
 }
@@ -236,7 +233,7 @@ fn default_scripts() -> Vec<Script> {
     }).to_string();
 
     vec![
-        Script { name: "About Me".to_string(), text: "Hi, I'm Arun.".to_string(), content: about_me_content },
+        Script { name: "About Me".to_string(), text: "Hi, I'm using OpenTeleprompter.".to_string(), content: about_me_content },
         Script { name: "Meeting Notes".to_string(), text: "Quick recap.".to_string(), content: meeting_content },
         Script { name: "Product Demo".to_string(), text: "Let me walk you through what we've built.".to_string(), content: demo_content },
     ]
@@ -294,6 +291,10 @@ fn set_config(app: AppHandle, state: State<AppState>, patch: serde_json::Value) 
     if let Some(v) = patch.get("autoScroll").and_then(|v| v.as_bool()) { cfg.auto_scroll = v; }
     if let Some(v) = patch.get("micDeviceId").and_then(|v| v.as_str()) { cfg.mic_device_id = v.to_string(); }
     if let Some(v) = patch.get("theme").and_then(|v| v.as_str()) { cfg.theme = v.to_string(); }
+    if let Some(v) = patch.get("fontSize").and_then(|v| v.as_f64()) { cfg.font_size = v; }
+    if let Some(v) = patch.get("textAlign").and_then(|v| v.as_str()) { cfg.text_align = v.to_string(); }
+    if let Some(v) = patch.get("mirrorText").and_then(|v| v.as_bool()) { cfg.mirror_text = v; }
+    if let Some(v) = patch.get("eyeLineGuide").and_then(|v| v.as_bool()) { cfg.eye_line_guide = v; }
 
     let cfg_clone = cfg.clone();
     save_config(&cfg_clone);
@@ -495,13 +496,6 @@ fn open_settings(app: AppHandle) {
 }
 
 #[tauri::command]
-fn close_welcome(app: AppHandle) {
-    if let Some(w) = app.get_webview_window("welcome") {
-        let _ = w.close();
-    }
-}
-
-#[tauri::command]
 fn open_url(_app: AppHandle, url: String) {
     let _ = open::that(url);
 }
@@ -511,7 +505,6 @@ fn open_url(_app: AppHandle, url: String) {
 fn create_prompter_window(app: &AppHandle) {
     if let Some(w) = app.get_webview_window("prompter") {
         let _ = w.close();
-        std::thread::sleep(std::time::Duration::from_millis(200));
     }
 
     let cfg = app.try_state::<AppState>()
@@ -578,9 +571,10 @@ fn create_prompter_window(app: &AppHandle) {
 }
 
 fn position_settings_window(app: &AppHandle, w: &WebviewWindow) {
-    let scale = app.primary_monitor().ok().flatten().map(|m| m.scale_factor()).unwrap_or(1.0);
-    let screen_w = app.primary_monitor().ok().flatten().map(|m| m.size().width as f64 / scale).unwrap_or(1440.0);
-    let screen_h = app.primary_monitor().ok().flatten().map(|m| m.size().height as f64 / scale).unwrap_or(900.0);
+    let monitor = app.primary_monitor().ok().flatten();
+    let scale    = monitor.as_ref().map(|m| m.scale_factor()).unwrap_or(1.0);
+    let screen_w = monitor.as_ref().map(|m| m.size().width  as f64 / scale).unwrap_or(1440.0);
+    let screen_h = monitor.as_ref().map(|m| m.size().height as f64 / scale).unwrap_or(900.0);
 
     #[cfg(target_os = "windows")]
     let (panel_w, panel_h) = (220.0_f64, 400.0_f64);
@@ -665,10 +659,9 @@ pub fn run() {
             quit_app, open_devtools,
             hide_settings, start_drag,
             set_movable, move_window, get_window_pos,
-            close_welcome, open_url, open_settings,
+            open_url, open_settings,
             focus_prompter, elevate_notch_window,
-        ])
-        .setup(|app| {
+            ])        .setup(|app| {
             let app_handle = app.handle().clone();
 
             #[cfg(target_os = "macos")]
@@ -688,7 +681,7 @@ pub fn run() {
             #[cfg(debug_assertions)]
             let prompter_url = tauri::WebviewUrl::External("http://localhost:1420".parse().unwrap());
             #[cfg(not(debug_assertions))]
-            let prompter_url = tauri::WebviewUrl::App("renderer/index.html".into());
+            let prompter_url = tauri::WebviewUrl::App("index.html".into());
 
             let prompter = tauri::WebviewWindowBuilder::new(
                 app, "prompter",
@@ -718,48 +711,6 @@ pub fn run() {
                 prompter.set_content_protected(true).ok();
             }
 
-            // ── Welcome screen (first launch only) ────────
-            if is_first_launch() {
-                mark_launched();
-                let monitor  = app_handle.primary_monitor().ok().flatten();
-                let scale    = monitor.as_ref().map(|m| m.scale_factor()).unwrap_or(1.0);
-                let screen_w = monitor.as_ref().map(|m| m.size().width  as f64 / scale).unwrap_or(1440.0);
-                let screen_h = monitor.as_ref().map(|m| m.size().height as f64 / scale).unwrap_or(900.0);
-                let win_w = 460.0_f64;
-                let win_h = 600.0_f64;
-                let wx = (screen_w - win_w) / 2.0;
-                let wy = (screen_h - win_h) / 2.0;
-
-                // On Windows: use decorations (no transparent borderless) to avoid invisible window bug
-                #[cfg(target_os = "windows")]
-                let _ = tauri::WebviewWindowBuilder::new(
-                    app, "welcome",
-                    tauri::WebviewUrl::App("renderer/welcome.html".into()),
-                )
-                .title("Welcome to OpenTeleprompter")
-                .decorations(true)
-                .transparent(false)
-                .always_on_top(true)
-                .resizable(false)
-                .inner_size(win_w, win_h)
-                .position(wx, wy)
-                .build();
-
-                #[cfg(not(target_os = "windows"))]
-                let _ = tauri::WebviewWindowBuilder::new(
-                    app, "welcome",
-                    tauri::WebviewUrl::App("renderer/welcome.html".into()),
-                )
-                .title("Welcome to OpenTeleprompter")
-                .decorations(false)
-                .transparent(true)
-                .always_on_top(true)
-                .resizable(false)
-                .inner_size(win_w, win_h)
-                .position(wx, wy)
-                .build();
-            }
-
             // ── Tray ───────────────────────────────────────
             let icon = tauri::image::Image::from_bytes(include_bytes!("../icons/tray-icon.png"))
                 .unwrap_or_else(|_| app_handle.default_window_icon().unwrap().clone());
@@ -768,6 +719,7 @@ pub fn run() {
             TrayIconBuilder::with_id("main-tray")
                 .icon(icon)
                 .icon_as_template(true)
+                .show_menu_on_left_click(false)
                 .tooltip("OpenTeleprompter")
                 .build(app)?;
 
