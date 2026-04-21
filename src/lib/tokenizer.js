@@ -44,7 +44,8 @@ export function tokenizeDoc(doc) {
     if (node.type === 'heading') {
       const level = node.attrs?.level ?? 1
       const text = node.content?.map(c => c.text ?? '').join('') ?? ''
-      tokens.push({ type: 'heading', level, text, id: headingId++ })
+      const isCue = level === 1 || level === 2
+      tokens.push({ type: 'heading', level, text, id: isCue ? headingId++ : null })
       tokens.push({ type: 'newline' })
       return
     }
