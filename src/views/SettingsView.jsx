@@ -194,15 +194,17 @@ export default function SettingsView() {
               />
             </div>
 
-            <div className="s-setting-row s-flex-row">
-              <div className="s-row-left">
-                <span className="s-label">Auto-scroll</span>
-                <span className="s-sublabel">Scroll continuously without mic input</span>
+            <div className="s-setting-row">
+              <span className="s-label">Scroll mode</span>
+              <div className="s-segmented">
+                {[['Voice', false], ['Auto-scroll', true]].map(([label, val]) => (
+                  <button
+                    key={label}
+                    className={`s-seg-btn ${autoScroll === val ? 'active' : ''}`}
+                    onClick={() => { setAutoScroll(val); setConfig({ autoScroll: val }) }}
+                  >{label}</button>
+                ))}
               </div>
-              <Toggle checked={autoScroll} onChange={v => {
-                setAutoScroll(v)
-                setConfig({ autoScroll: v })
-              }} />
             </div>
 
             <div className="s-setting-row">
