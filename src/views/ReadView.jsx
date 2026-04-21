@@ -19,11 +19,14 @@ export default function ReadView() {
     SPEEDS.indexOf(config.scrollSpeed) !== -1 ? SPEEDS.indexOf(config.scrollSpeed) : 3
   )
   const fontSize = config.fontSize || 24
-  const [micStatus,  setMicStatus]  = useState('Waiting…')
+  const [micStatus,     setMicStatus]     = useState('Waiting…')
+  const [isPassThrough, setIsPassThrough] = useState(false)
+  const [sectionLabel,  setSectionLabel]  = useState('')
 
   const isPausedRef        = useRef(false)
   const isSpeakingRef      = useRef(false)
   const isHoverPausedRef   = useRef(false)
+  const isPassThroughRef   = useRef(false)
   const speedIdxRef        = useRef(speedIdx)
   const scrollPosRef       = useRef(0)
   const lastFrameRef       = useRef(0)
@@ -33,6 +36,8 @@ export default function ReadView() {
   const markerRefs         = useRef({})
   const headingRefs        = useRef({})
   const firedMarkers       = useRef(new Set())
+  const firedHeadings      = useRef(new Set())
+  const sectionTimerRef    = useRef(null)
   const micEngineRef       = useRef(null)
   const prevMicDeviceIdRef = useRef(config.micDeviceId)
   const frameCountRef      = useRef(0)
@@ -63,6 +68,7 @@ export default function ReadView() {
     if (progressBarRef.current && maxScroll > 0)
       progressBarRef.current.style.width = `${(scrollPosRef.current / maxScroll) * 100}%`
     firedMarkers.current.clear()
+    firedHeadings.current.clear()
   }
 
   useEffect(() => {
@@ -122,6 +128,20 @@ export default function ReadView() {
           }
         }
       })
+      // Section indicator: show heading text briefly when an h1 enters reading zone
+      Object.entries(headingRefs.current).forEach(([idStr, el]) => {
+        if (!el) return
+        const id = Number(idStr)
+        if (firedHeadings.current.has(id)) return
+        if (el.offsetTop - scrollPosRef.current < readingZone) {
+          firedHeadings.current.add(id)
+          if (el.dataset.level === '1') {
+            setSectionLabel(el.textContent)
+            clearTimeout(sectionTimerRef.current)
+            sectionTimerRef.current = setTimeout(() => setSectionLabel(''), 1500)
+          }
+        }
+      })
     }
 
     function loop(ts) {
@@ -172,6 +192,7 @@ export default function ReadView() {
         firedMarkers.current.clear()
       }
       if (action === 'stop') handleDone()
+      if (action === 'passthrough') togglePassThrough()
     }).then(fn => { unlistenShortcut = fn })
 
     window.__TAURI__?.event?.listen('cue-jump', (e) => {
@@ -207,12 +228,20 @@ export default function ReadView() {
     if (scriptTextRef.current) scriptTextRef.current.style.transform = 'translateY(0px)'
     if (progressBarRef.current) progressBarRef.current.style.width = '0%'
     firedMarkers.current.clear()
+    firedHeadings.current.clear()
   }
 
   function handleMouseEnter() { isHoverPausedRef.current = true; setMicStatus('Hover pause') }
   function handleMouseLeave() {
     isHoverPausedRef.current = false
     if (!isPausedRef.current) setMicStatus(isSpeakingRef.current ? 'Speaking' : 'Waiting…')
+  }
+
+  function togglePassThrough() {
+    const next = !isPassThroughRef.current
+    isPassThroughRef.current = next
+    setIsPassThrough(next)
+    API.setIgnoreMouse(next)
   }
 
   function handleWheel(e) {
@@ -252,6 +281,7 @@ export default function ReadView() {
               <div
                 key={i}
                 ref={el => { if (token.id !== null) headingRefs.current[token.id] = el }}
+                data-level={token.level}
                 className={`read-heading read-heading-${token.level}`}
               >
                 {token.text}
@@ -268,13 +298,17 @@ export default function ReadView() {
               </span>
             )
             return (
-              <span key={i} style={{ fontWeight: token.bold ? 700 : undefined, color: token.color || undefined }}>
+              <span key={i} style={{ fontWeight: token.bold ? 700 : undefined, color: token.color || (token.isLink ? '#a78bfa' : undefined) }}>
                 {token.text}{' '}
               </span>
             )
           }) : scriptText}
         </div>
       </div>
+
+      {sectionLabel && (
+        <div id="section-indicator">{sectionLabel}</div>
+      )}
 
       <div id="read-controls">
         <div className="ctrl-left">
@@ -288,6 +322,7 @@ export default function ReadView() {
           <span id="speed-val" aria-label={`Speed ${SPEEDS[speedIdx]}x`}>{SPEEDS[speedIdx]}×</span>
           <button className="ctrl-btn" aria-label="Increase scroll speed" onClick={() => setSpeedIdx(i => { const n = Math.min(SPEEDS.length - 1, i + 1); API.setConfig({ scrollSpeed: SPEEDS[n] }); return n })}>+</button>
           <button className="ctrl-btn" aria-label={isPaused ? 'Resume' : 'Pause'} onClick={togglePause}>{isPaused ? '▶' : '⏸'}</button>
+          <button className={`ctrl-btn${isPassThrough ? ' active' : ''}`} aria-label={isPassThrough ? 'Disable click-through' : 'Enable click-through'} onClick={togglePassThrough} title="Click-through">⊙</button>
           <button className="ctrl-btn" aria-label="Reset to beginning" onClick={handleReset}>↺</button>
           <button className="ctrl-btn" aria-label="Stop and close" onClick={handleDone}>✕</button>
         </div>

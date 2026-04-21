@@ -35,7 +35,9 @@ export default function SettingsView() {
   const [mode,         setMode]         = useState('notch')
   const [speedIdx,     setSpeedIdx]     = useState(3)
   const [fontSize,     setFontSize]     = useState(22)
+  const [opacity,      setOpacity]      = useState(1.0)
   const [screenshareHidden, setScreenshareHidden] = useState(true)
+  const [autoScroll,   setAutoScroll]   = useState(true)
   const [isRunning,  setIsRunning]  = useState(false)
   const [isPaused,   setIsPaused]   = useState(false)
   const [scrollPct,  setScrollPct]  = useState(0)
@@ -87,7 +89,9 @@ export default function SettingsView() {
   function applyConfig(c) {
     if (c.mode)         setMode(c.mode)
     if (c.fontSize)     setFontSize(c.fontSize)
+    if (c.opacity != null) setOpacity(c.opacity)
     if (c.screenshareHidden != null) setScreenshareHidden(c.screenshareHidden)
+    if (c.autoScroll != null) setAutoScroll(c.autoScroll)
     if (c.scrollSpeed != null) {
       const i = SPEEDS.indexOf(c.scrollSpeed)
       setSpeedIdx(i !== -1 ? i : 3)
@@ -173,6 +177,31 @@ export default function SettingsView() {
                   setConfig({ fontSize: val })
                 }}
               />
+            </div>
+
+            <div className="s-setting-row">
+              <div className="s-row-info">
+                <span className="s-label">Opacity</span>
+                <span className="s-val">{Math.round(opacity * 100)}%</span>
+              </div>
+              <input type="range" className="s-slider" min="0.2" max="1" step="0.05"
+                value={opacity} onChange={e => {
+                  const val = parseFloat(e.target.value)
+                  setOpacity(val)
+                  setConfig({ opacity: val })
+                }}
+              />
+            </div>
+
+            <div className="s-setting-row s-flex-row">
+              <div className="s-row-left">
+                <span className="s-label">Auto-scroll</span>
+                <span className="s-sublabel">Scroll continuously without mic input</span>
+              </div>
+              <Toggle checked={autoScroll} onChange={v => {
+                setAutoScroll(v)
+                setConfig({ autoScroll: v })
+              }} />
             </div>
 
             <div className="s-setting-row">

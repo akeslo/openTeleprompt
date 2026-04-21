@@ -560,6 +560,12 @@ body.mode-classic .idle-chevron {
   transition: background 0.15s;
 }
 .tb-marker:hover { background: rgba(250,204,21,0.2); }
+.tb-heading-1 { color: #60a5fa; }
+.tb-heading-2 { color: #4ade80; }
+.tb-heading-3 { color: #facc15; }
+.tb-heading-1.active { background: rgba(96,165,250,0.15); color: #60a5fa; }
+.tb-heading-2.active { background: rgba(74,222,128,0.15); color: #4ade80; }
+.tb-heading-3.active { background: rgba(250,204,21,0.15); color: #facc15; }
 
 /* ── Tiptap editor ────────────────────────────────────────── */
 .tiptap-wrap {
@@ -579,9 +585,10 @@ body.mode-classic .idle-chevron {
   min-height: 80px;
 }
 .tiptap-editor p { margin: 0 0 2px; }
-.tiptap-editor h1 { font-size: 1.5em; font-weight: 700; margin: 10px 0 2px; color: var(--text-primary); }
-.tiptap-editor h2 { font-size: 1.2em; font-weight: 700; margin: 8px 0 2px; color: var(--text-primary); }
-.tiptap-editor h3 { font-size: 1.05em; font-weight: 600; margin: 6px 0 2px; color: var(--text-secondary); }
+.tiptap-editor h1 { font-size: 1.5em; font-weight: 700; margin: 10px 0 2px; color: #60a5fa; }
+.tiptap-editor h2 { font-size: 1.2em; font-weight: 700; margin: 8px 0 2px; color: #4ade80; }
+.tiptap-editor h3 { font-size: 1.05em; font-weight: 600; margin: 6px 0 2px; color: #facc15; }
+.tiptap-editor a { color: #a78bfa; text-decoration: underline; cursor: default; }
 .tiptap-editor p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   color: var(--text-muted);
@@ -661,14 +668,40 @@ body.mode-classic .idle-chevron {
 }
 .read-heading-1 {
   font-size: 1.6em;
-  color: var(--text-primary);
+  color: #60a5fa;
 }
 .read-heading-2 {
   font-size: 1.25em;
-  color: var(--text-secondary);
+  color: #4ade80;
 }
 .read-heading-3 {
   font-size: 1.05em;
-  color: var(--text-secondary);
+  color: #facc15;
   font-weight: 600;
 }
+
+#section-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.75);
+  color: #60a5fa;
+  font-size: 0.85em;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(96,165,250,0.3);
+  pointer-events: none;
+  z-index: 50;
+  white-space: nowrap;
+  animation: section-fade 1.5s ease forwards;
+}
+@keyframes section-fade {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+  15%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.ctrl-btn.active { background: #3f3f46; color: #fff; }

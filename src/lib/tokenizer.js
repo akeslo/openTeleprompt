@@ -28,6 +28,7 @@ export function tokenizeDoc(doc) {
       const text = node.text || ''
       const isBold = node.marks?.some(m => m.type === 'bold') ?? false
       const color = node.marks?.find(m => m.type === 'textStyle')?.attrs?.color ?? null
+      const isLink = node.marks?.some(m => m.type === 'link') ?? false
       const words = text.split(/(\s+)/)
       for (const word of words) {
         if (!word || /^\s+$/.test(word)) continue
@@ -35,7 +36,7 @@ export function tokenizeDoc(doc) {
         if (markerMatch) {
           tokens.push({ type: 'marker', text: word, marker: markerMatch[1].toUpperCase() })
         } else {
-          tokens.push({ type: 'word', text: word, bold: isBold, color })
+          tokens.push({ type: 'word', text: word, bold: isBold, color, isLink })
         }
       }
       return

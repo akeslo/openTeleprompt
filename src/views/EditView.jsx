@@ -3,6 +3,7 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
+import Link from '@tiptap/extension-link'
 import { useAppStore } from '../store'
 import { API } from '../lib/api'
 import { extractCues } from '../lib/tokenizer'
@@ -45,7 +46,12 @@ export default function EditView() {
   const emitDebounceRef = useRef(null)
 
   const editor = useEditor({
-    extensions: [StarterKit, TextStyle, Color],
+    extensions: [
+      StarterKit,
+      TextStyle,
+      Color,
+      Link.configure({ openOnClick: false, autolink: true }),
+    ],
     content: '<p></p>',
     editorProps: {
       attributes: { class: 'tiptap-editor', spellcheck: 'true' },
@@ -259,6 +265,17 @@ export default function EditView() {
           onMouseDown={(e) => { e.preventDefault(); editor?.chain().focus().unsetColor().run() }}
           title="Clear color"
         >✕</button>
+
+        <div className="tb-divider" />
+
+        {[1, 2, 3].map(level => (
+          <button
+            key={level}
+            className={`tb-btn tb-heading-${level}${editor?.isActive('heading', { level }) ? ' active' : ''}`}
+            onMouseDown={(e) => { e.preventDefault(); editor?.chain().focus().toggleHeading({ level }).run() }}
+            title={`Heading ${level}`}
+          >{`H${level}`}</button>
+        ))}
 
         <div className="tb-divider" />
 
