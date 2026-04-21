@@ -42,7 +42,6 @@ export default function App() {
         fontSize:     cfg.fontSize     ?? cfg.font_size     ?? 24,
         textAlign:    cfg.textAlign    ?? cfg.text_align    ?? 'center',
         mirrorText:   cfg.mirrorText   ?? cfg.mirror_text   ?? false,
-        eyeLineGuide: cfg.eyeLineGuide ?? cfg.eye_line_guide ?? false,
         opacity:      cfg.opacity      ?? 1,
         threshold:    cfg.threshold    ?? 0.018,
         autoScroll:   cfg.autoScroll   ?? cfg.auto_scroll   ?? false,
@@ -61,7 +60,7 @@ export default function App() {
       if (!cfg) return
       const SNAKE = {
         scroll_speed: 'scrollSpeed', auto_scroll: 'autoScroll', mic_device_id: 'micDeviceId',
-        font_size: 'fontSize', text_align: 'textAlign', mirror_text: 'mirrorText', eye_line_guide: 'eyeLineGuide',
+        font_size: 'fontSize', text_align: 'textAlign', mirror_text: 'mirrorText',
       }
       const patch = {}
       for (const [k, v] of Object.entries(cfg)) {

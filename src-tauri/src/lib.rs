@@ -86,8 +86,6 @@ pub struct Config {
     pub text_align: String,
     #[serde(default)]
     pub mirror_text: bool,
-    #[serde(default)]
-    pub eye_line_guide: bool,
 }
 
 fn default_text_align() -> String { "center".to_string() }
@@ -106,7 +104,6 @@ impl Default for Config {
             font_size: 24.0,
             text_align: "center".to_string(),
             mirror_text: false,
-            eye_line_guide: false,
         }
     }
 }
@@ -299,7 +296,6 @@ fn set_config(app: AppHandle, state: State<AppState>, patch: serde_json::Value) 
     if let Some(v) = patch.get("fontSize").and_then(|v| v.as_f64()) { cfg.font_size = v; }
     if let Some(v) = patch.get("textAlign").and_then(|v| v.as_str()) { cfg.text_align = v.to_string(); }
     if let Some(v) = patch.get("mirrorText").and_then(|v| v.as_bool()) { cfg.mirror_text = v; }
-    if let Some(v) = patch.get("eyeLineGuide").and_then(|v| v.as_bool()) { cfg.eye_line_guide = v; }
 
     let cfg_clone = cfg.clone();
     save_config(&cfg_clone);

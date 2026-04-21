@@ -10,7 +10,6 @@ export const useAppStore = create((set) => ({
     fontSize: 16,
     textAlign: 'center',
     mirrorText: false,
-    eyeLineGuide: false,
     opacity: 1,
     threshold: 0.018,
     autoScroll: false,

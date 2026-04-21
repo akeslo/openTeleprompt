@@ -35,7 +35,6 @@ export default function SettingsView() {
   const [mode,         setMode]         = useState('notch')
   const [speedIdx,     setSpeedIdx]     = useState(3)
   const [fontSize,     setFontSize]     = useState(22)
-  const [eyeLineGuide,     setEyeLineGuide]     = useState(false)
   const [screenshareHidden, setScreenshareHidden] = useState(true)
   const [isRunning,  setIsRunning]  = useState(false)
   const [isPaused,   setIsPaused]   = useState(false)
@@ -88,7 +87,6 @@ export default function SettingsView() {
   function applyConfig(c) {
     if (c.mode)         setMode(c.mode)
     if (c.fontSize)     setFontSize(c.fontSize)
-    if (c.eyeLineGuide     != null) setEyeLineGuide(c.eyeLineGuide)
     if (c.screenshareHidden != null) setScreenshareHidden(c.screenshareHidden)
     if (c.scrollSpeed != null) {
       const i = SPEEDS.indexOf(c.scrollSpeed)
@@ -188,17 +186,6 @@ export default function SettingsView() {
                   </button>
                 ))}
               </div>
-            </div>
-
-            <div className="s-setting-row s-flex-row">
-              <div className="s-row-left">
-                <span className="s-label">Eye-line guide</span>
-                <span className="s-sublabel">Camera alignment bar</span>
-              </div>
-              <Toggle checked={eyeLineGuide} onChange={v => {
-                setEyeLineGuide(v)
-                setConfig({ eyeLineGuide: v })
-              }} />
             </div>
 
             <div className="s-setting-row s-flex-row">
