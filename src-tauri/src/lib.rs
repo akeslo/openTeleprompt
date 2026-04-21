@@ -813,6 +813,7 @@ pub fn run() {
                 Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::ArrowUp),
                 Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::ArrowDown),
                 Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyR),
+                Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyT),
             ];
             #[cfg(not(target_os = "windows"))]
             let shortcuts = vec![
@@ -824,6 +825,8 @@ pub fn run() {
                 Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::ArrowDown),
                 Shortcut::new(Some(Modifiers::SUPER   | Modifiers::SHIFT), Code::KeyR),
                 Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyR),
+                Shortcut::new(Some(Modifiers::SUPER   | Modifiers::SHIFT), Code::KeyT),
+                Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyT),
             ];
 
             // Register shortcuts — skip any that are already taken by the OS
@@ -835,6 +838,7 @@ pub fn run() {
                         Code::ArrowUp   => "faster",
                         Code::ArrowDown => "slower",
                         Code::KeyR      => "reset",
+                        Code::KeyT      => "passthrough",
                         _ => return,
                     };
                     let _ = app.emit_to("prompter", "shortcut", action);
