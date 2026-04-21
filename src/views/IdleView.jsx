@@ -32,6 +32,10 @@ export default function IdleView({ isHovered }) {
     <div
       className="idle-notch-wrap"
       onClick={isClassic ? undefined : handleOpen}
+      role={isClassic ? undefined : 'button'}
+      aria-label={isClassic ? undefined : `${label} — click to open`}
+      tabIndex={isClassic ? undefined : 0}
+      onKeyDown={isClassic ? undefined : (e) => { if (e.key === 'Enter' || e.key === ' ') handleOpen() }}
     >
       <div className={`idle-pill-content${isHovered ? ' hovered' : ''}`}>
 

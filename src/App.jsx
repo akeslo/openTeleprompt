@@ -59,18 +59,15 @@ export default function App() {
 
     API.onConfigUpdate((cfg) => {
       if (!cfg) return
+      const SNAKE = {
+        scroll_speed: 'scrollSpeed', auto_scroll: 'autoScroll', mic_device_id: 'micDeviceId',
+        font_size: 'fontSize', text_align: 'textAlign', mirror_text: 'mirrorText', eye_line_guide: 'eyeLineGuide',
+      }
       const patch = {}
-      const keys = ['mode','theme','scrollSpeed','scroll_speed','opacity','threshold',
-                    'autoScroll','auto_scroll','micDeviceId','mic_device_id','fontSize','font_size','textAlign','text_align',
-                    'mirrorText','mirror_text','eyeLineGuide','eye_line_guide']
-      keys.forEach(k => { if (cfg[k] !== undefined) patch[k] = cfg[k] })
-      if (patch.scroll_speed  !== undefined) { patch.scrollSpeed  = patch.scroll_speed;  delete patch.scroll_speed }
-      if (patch.auto_scroll   !== undefined) { patch.autoScroll   = patch.auto_scroll;   delete patch.auto_scroll  }
-      if (patch.mic_device_id !== undefined) { patch.micDeviceId  = patch.mic_device_id; delete patch.mic_device_id }
-      if (patch.font_size     !== undefined) { patch.fontSize     = patch.font_size;     delete patch.font_size     }
-      if (patch.text_align    !== undefined) { patch.textAlign    = patch.text_align;    delete patch.text_align    }
-      if (patch.mirror_text   !== undefined) { patch.mirrorText   = patch.mirror_text;   delete patch.mirror_text   }
-      if (patch.eye_line_guide !== undefined) { patch.eyeLineGuide = patch.eye_line_guide; delete patch.eye_line_guide }
+      for (const [k, v] of Object.entries(cfg)) {
+        if (v === undefined) continue
+        patch[SNAKE[k] ?? k] = v
+      }
       if (Object.keys(patch).length) setConfig(patch)
     }).then(fn => { unlistenConfig = fn })
 

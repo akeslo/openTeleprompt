@@ -2,10 +2,10 @@
   --s-bg: #0f0f11;
   --s-header-bg: #0f0f11;
   --s-card-bg: #1a1a1c;
-  --s-border: rgba(255,255,255,0.08);
-  --s-text: #ffffff;
-  --s-label: #f4f4f5;
-  --s-muted: #71717a;
+  --s-border: rgba(255,255,255,0.06);
+  --s-text: rgba(255,255,255,0.85);
+  --s-label: rgba(255,255,255,0.85);
+  --s-muted: rgba(255,255,255,0.40);
   --s-accent: #ffffff;
   --s-highlight: #ffffff;
   --s-live: #ef4444;
@@ -21,7 +21,7 @@ html { background: transparent; }
 body {
   width: 280px; height: auto;
   background: transparent;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
 }
@@ -65,8 +65,8 @@ body {
   font-size: 12px; font-weight: 600; padding: 10px 0; cursor: pointer;
   position: relative; transition: color 0.15s;
 }
-.s-tab:hover { color: #fff; }
-.s-tab.active { color: #fff; }
+.s-tab:hover { color: var(--s-text); }
+.s-tab.active { color: var(--s-text); }
 .s-tab.active::after {
   content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
   height: 2px; background: #fff;
@@ -109,14 +109,14 @@ body {
 /* Controls Main */
 .s-controls-main { display: flex; gap: 8px; }
 .s-btn-pause {
-  flex: 1; background: var(--s-btn-bg); border: none; color: #fff;
+  flex: 1; background: var(--s-btn-bg); border: none; color: var(--s-text);
   border-radius: 6px; padding: 10px; font-size: 13px; font-weight: 600;
   display: flex; align-items: center; justify-content: center; gap: 8px;
   cursor: pointer; transition: background 0.15s;
 }
 .s-btn-pause:hover { background: var(--s-btn-hover); }
 .s-btn-reset {
-  background: var(--s-btn-bg); border: none; color: #fff;
+  background: var(--s-btn-bg); border: none; color: var(--s-text);
   border-radius: 6px; padding: 10px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: background 0.15s;
@@ -127,7 +127,7 @@ body {
 .s-setting-row { display: flex; flex-direction: column; gap: 8px; }
 .s-flex-row { flex-direction: row; align-items: center; justify-content: space-between; }
 .s-row-info { display: flex; justify-content: space-between; align-items: center; }
-.s-label { font-size: 13px; font-weight: 600; color: #fff; }
+.s-label { font-size: 13px; font-weight: 600; color: var(--s-text); }
 .s-sublabel { font-size: 11px; color: var(--s-muted); display: block; }
 .s-val { font-size: 11px; font-weight: 500; color: var(--s-muted); }
 

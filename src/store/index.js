@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export const useAppStore = create((set, get) => ({
+export const useAppStore = create((set) => ({
   view: 'idle', // 'idle' | 'edit' | 'read'
   setView: (view) => set({ view }),
 
@@ -29,21 +29,13 @@ export const useAppStore = create((set, get) => ({
   scriptDoc: null,  // Tiptap JSON doc
   setScriptDoc: (doc) => set({ scriptDoc: doc }),
 
+  // Read by IdleView for dot state
   isPaused: false,
-  isHoverPaused: false,
   isSpeaking: false,
-  isRunning: false,
   setIsPaused: (v) => set({ isPaused: v }),
-  setIsHoverPaused: (v) => set({ isHoverPaused: v }),
   setIsSpeaking: (v) => set({ isSpeaking: v }),
-  setIsRunning: (v) => set({ isRunning: v }),
-
-  speedIndex: 3,
-  setSpeedIndex: (i) => set({ speedIndex: i }),
 
   // Cue navigation
   startCueId: -1,
   setStartCueId: (id) => set({ startCueId: id }),
-  cues: [],
-  setCues: (cues) => set({ cues }),
 }))

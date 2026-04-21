@@ -6,6 +6,7 @@ import { Color } from '@tiptap/extension-color'
 import { useAppStore } from '../store'
 import { API } from '../lib/api'
 import { extractCues } from '../lib/tokenizer'
+import { mdToHtml, tiptapToMarkdown, tiptapToPlainText } from '../lib/fileUtils'
 
 const COLORS = [
   { label: 'White',  value: '#ffffff' },
@@ -38,6 +39,9 @@ export default function EditView() {
 
   const isClassic = config?.mode === 'classic'
   const [stats, setStats] = useState('')
+  const [saveFlash, setSaveFlash] = useState(false)
+  const [isOpening, setIsOpening] = useState(false)
+  const [openError, setOpenError] = useState(null)
   const emitDebounceRef = useRef(null)
 
   const editor = useEditor({
@@ -74,17 +78,58 @@ export default function EditView() {
     const text = editor.getText().trim()
     if (!text) return
     const name = text.split('\n')[0].substring(0, 40) || 'Untitled'
-    const content = JSON.stringify(editor.getJSON())
+    const doc = editor.getJSON()
+    const content = JSON.stringify(doc)
     const updated = [...scripts]
     if (currentScriptIndex >= 0) {
-      updated[currentScriptIndex] = { ...updated[currentScriptIndex], name, text, content }
+      const existing = updated[currentScriptIndex]
+      updated[currentScriptIndex] = { ...existing, name, text, content }
+      // Save back to source file if this script was loaded from one
+      if (existing.filePath) {
+        const fileContent = existing.fileExt === 'md'
+          ? tiptapToMarkdown(doc)
+          : tiptapToPlainText(doc)
+        API.saveFile(existing.filePath, fileContent)
+      }
     } else {
-      updated.unshift({ name, text, content })
+      updated.unshift({ name, text, content, filePath: '', fileExt: '' })
       setCurrentScriptIndex(0)
     }
     setScripts(updated)
     API.saveScripts(updated)
+    setSaveFlash(true)
+    setTimeout(() => setSaveFlash(false), 1500)
   }, [editor, scripts, currentScriptIndex])
+
+  async function handleOpenFile() {
+    setIsOpening(true)
+    setOpenError(null)
+    try {
+      const result = await API.openFile()
+      if (!result) return
+      const { path, content, ext } = result
+      const fileName = path.split('/').pop().split('\\').pop().replace(/\.[^.]+$/, '')
+      const html = ext === 'md'
+        ? mdToHtml(content)
+        : content.split('\n').map(line => `<p>${line || '<br>'}</p>`).join('')
+      editor.commands.setContent(html)
+      const tiptapDoc = editor.getJSON()
+      const plainText = editor.getText().trim()
+      const newScript = { name: fileName, text: plainText, content: JSON.stringify(tiptapDoc), filePath: path, fileExt: ext }
+      const updated = [...scripts, newScript]
+      setScripts(updated)
+      setCurrentScriptIndex(updated.length - 1)
+      API.saveScripts(updated)
+      setStats(computeStats(plainText))
+      emitActiveScript(tiptapDoc)
+      editor.commands.focus()
+    } catch {
+      setOpenError('Failed to open file')
+      setTimeout(() => setOpenError(null), 2500)
+    } finally {
+      setIsOpening(false)
+    }
+  }
 
   function handleStart() {
     if (!editor) return
@@ -106,7 +151,20 @@ export default function EditView() {
     editor?.commands.setContent('<p></p>')
     editor?.commands.focus()
     setStats('')
+    emitActiveScript({ type: 'doc', content: [{ type: 'paragraph' }] })
   }
+
+  // Cmd+S / Ctrl+S to save
+  useEffect(() => {
+    function onKeyDown(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault()
+        saveCurrentScript()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [saveCurrentScript])
 
   function loadScript(i) {
     setCurrentScriptIndex(i)
@@ -146,7 +204,12 @@ export default function EditView() {
         <button className="pill-btn ghost" onClick={handleCollapse}>✕</button>
         <span className="view-title">Script</span>
         <button className="pill-btn ghost" onClick={handleNew}>+ New</button>
-        <button className="pill-btn ghost" onClick={saveCurrentScript}>Save</button>
+        <button className="pill-btn ghost" onClick={handleOpenFile} disabled={isOpening} aria-label="Open file">
+          {isOpening ? '…' : openError ? 'Error' : 'Open'}
+        </button>
+        <button className="pill-btn ghost" onClick={saveCurrentScript} aria-label="Save script">
+          {saveFlash ? 'Saved ✓' : 'Save'}
+        </button>
         <button className="pill-btn accent" onClick={handleStart}>Go →</button>
       </div>
 

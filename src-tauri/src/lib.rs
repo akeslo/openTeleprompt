@@ -118,6 +118,10 @@ pub struct Script {
     pub text: String,
     #[serde(default)]
     pub content: String, // Tiptap JSON string
+    #[serde(default)]
+    pub file_path: String, // absolute path if loaded from file, empty otherwise
+    #[serde(default)]
+    pub file_ext: String,  // "txt" or "md"
 }
 
 // ── App state ──────────────────────────────────────────────
@@ -233,9 +237,9 @@ fn default_scripts() -> Vec<Script> {
     }).to_string();
 
     vec![
-        Script { name: "About Me".to_string(), text: "Hi, I'm using OpenTeleprompter.".to_string(), content: about_me_content },
-        Script { name: "Meeting Notes".to_string(), text: "Quick recap.".to_string(), content: meeting_content },
-        Script { name: "Product Demo".to_string(), text: "Let me walk you through what we've built.".to_string(), content: demo_content },
+        Script { name: "About Me".to_string(), text: "Hi, I'm using OpenTeleprompter.".to_string(), content: about_me_content, file_path: String::new(), file_ext: String::new() },
+        Script { name: "Meeting Notes".to_string(), text: "Quick recap.".to_string(), content: meeting_content, file_path: String::new(), file_ext: String::new() },
+        Script { name: "Product Demo".to_string(), text: "Let me walk you through what we've built.".to_string(), content: demo_content, file_path: String::new(), file_ext: String::new() },
     ]
 }
 
@@ -435,6 +439,37 @@ fn resize_settings(app: AppHandle, dims: serde_json::Value) -> Result<(), String
         let _ = w.set_position(LogicalPosition::new(x, y));
     }
     Ok(())
+}
+
+#[tauri::command]
+async fn open_file(app: AppHandle) -> Result<serde_json::Value, String> {
+    use tauri_plugin_dialog::DialogExt;
+    use tokio::sync::oneshot;
+
+    let (tx, rx) = oneshot::channel();
+    app.dialog()
+        .file()
+        .add_filter("Text files", &["txt", "md"])
+        .pick_file(move |fp| { let _ = tx.send(fp); });
+
+    match rx.await.map_err(|_| "Dialog closed".to_string())? {
+        Some(fp) => {
+            let path_buf = fp.into_path().map_err(|_| "Invalid path".to_string())?;
+            let path_str = path_buf.to_string_lossy().to_string();
+            let content = fs::read_to_string(&path_buf).map_err(|e| e.to_string())?;
+            let ext = path_buf.extension()
+                .and_then(|e| e.to_str())
+                .unwrap_or("txt")
+                .to_lowercase();
+            Ok(serde_json::json!({ "path": path_str, "content": content, "ext": ext }))
+        }
+        None => Ok(serde_json::json!(null)),
+    }
+}
+
+#[tauri::command]
+fn save_file(path: String, content: String) -> Result<(), String> {
+    fs::write(&path, content).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -649,6 +684,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_positioner::init())
         .manage(state)
         .invoke_handler(tauri::generate_handler![
@@ -661,6 +697,7 @@ pub fn run() {
             set_movable, move_window, get_window_pos,
             open_url, open_settings,
             focus_prompter, elevate_notch_window,
+            open_file, save_file,
             ])        .setup(|app| {
             let app_handle = app.handle().clone();
 
