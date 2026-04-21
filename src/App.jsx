@@ -113,7 +113,17 @@ export default function App() {
   }, [config.opacity])
 
   // ── Window resize ──────────────────────────────────────────
+  // Classic edit/read: only set initial size on view/mode change — hover must not snap
+  // back a window the user has manually resized.
   useEffect(() => {
+    if (!isClassic || (view !== 'edit' && view !== 'read')) return
+    const size = view === 'edit' ? CLASSIC_SIZES.edit : CLASSIC_SIZES.read
+    API.resizePrompter({ width: size.w, height: size.h })
+  }, [view, config.mode])
+
+  // Notch mode (all states) + classic idle hover expansion
+  useEffect(() => {
+    if (isClassic && (view === 'edit' || view === 'read')) return
     const sizes = isClassic ? CLASSIC_SIZES : ISLAND_SIZES
     const size  = view === 'edit' ? sizes.edit
                 : view === 'read' ? sizes.read
