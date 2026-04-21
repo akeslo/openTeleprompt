@@ -315,7 +315,12 @@ export default function ReadView() {
 
       <div id="read-controls">
         <div className="ctrl-left">
-          <span className={micRingClass}><span className="mic-core" /></span>
+          <span
+            className={micRingClass}
+            onClick={() => { const v = !configRef.current.autoScroll; setConfig({ autoScroll: v }); API.setConfig({ autoScroll: v }) }}
+            style={{ cursor: 'pointer' }}
+            title={config.autoScroll ? 'Switch to voice mode' : 'Switch to auto-scroll'}
+          ><span className="mic-core" /></span>
           <span id="status-text">{micStatus}</span>
         </div>
         <div className="ctrl-right">

@@ -655,7 +655,8 @@ fn show_settings(app: &AppHandle) {
         .transparent(true)
         .always_on_top(true)
         .skip_taskbar(true)
-        .resizable(false)
+        .resizable(true)
+        .min_inner_size(280.0, 300.0)
         .inner_size(win_w, win_h)
         .build()
         .ok();
