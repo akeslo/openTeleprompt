@@ -848,7 +848,11 @@ pub fn run() {
                     window.hide().ok();
                     api.prevent_close();
                 }
-                // Note: do NOT prevent prompter close — switch_mode needs to close and recreate it
+            }
+            if let tauri::WindowEvent::Focused(false) = event {
+                if window.label() == "settings" {
+                    window.hide().ok();
+                }
             }
         })
         .run(tauri::generate_context!())
