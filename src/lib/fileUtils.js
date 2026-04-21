@@ -11,6 +11,7 @@ export function tiptapToMarkdown(doc) {
 }
 
 function blockToMd(node) {
+  if (node.type === 'horizontalRule') return '---'
   if (node.type === 'heading') {
     const level = node.attrs?.level || 1
     return '#'.repeat(level) + ' ' + inlinesToMd(node.content)
@@ -39,16 +40,19 @@ function blockToMd(node) {
 
 function inlinesToMd(nodes) {
   return (nodes || []).map(n => {
+    if (n.type === 'hardBreak') return '  \n'
     if (n.type !== 'text') return ''
     let text = n.text || ''
     const marks = n.marks || []
-    const bold   = marks.some(m => m.type === 'bold')
-    const italic = marks.some(m => m.type === 'italic')
-    const code   = marks.some(m => m.type === 'code')
+    const bold      = marks.some(m => m.type === 'bold')
+    const italic    = marks.some(m => m.type === 'italic')
+    const code      = marks.some(m => m.type === 'code')
+    const colorMark = marks.find(m => m.type === 'textStyle' && m.attrs?.color)
     if (code)             return '`' + text + '`'
-    if (bold && italic)   return '***' + text + '***'
-    if (bold)             return '**' + text + '**'
-    if (italic)           return '*' + text + '*'
+    if (bold && italic)   text = '***' + text + '***'
+    else if (bold)        text = '**' + text + '**'
+    else if (italic)      text = '*' + text + '*'
+    if (colorMark)        text = `<span style="color:${colorMark.attrs.color}">${text}</span>`
     return text
   }).join('')
 }
