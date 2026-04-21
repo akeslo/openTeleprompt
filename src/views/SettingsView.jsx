@@ -5,19 +5,20 @@ const tauriListen = window.__TAURI__?.event?.listen ?? (() => Promise.resolve(()
 const tauriEmit   = window.__TAURI__?.event?.emit   ?? (() => Promise.resolve())
 
 const API = {
-  getConfig:        () => tauriInvoke('get_config'),
-  setConfig:        (patch) => tauriInvoke('set_config', { patch }),
-  switchMode:       (mode) => tauriInvoke('switch_mode', { mode }),
-  onConfigUpdate:   (cb) => tauriListen('config-update', (e) => cb(e.payload)),
-  onActiveScript:   (cb) => tauriListen('active-script', (e) => cb(e.payload)),
-  onScrollProgress: (cb) => tauriListen('scroll-progress', (e) => cb(e.payload)),
-  togglePrompter:   () => tauriInvoke('toggle_prompter'),
-  resizeSettings:   (dims) => tauriInvoke('resize_settings', { dims }),
-  quit:             () => tauriInvoke('quit_app'),
-  openDevTools:     () => tauriInvoke('open_devtools'),
-  hideSettings:     () => tauriInvoke('hide_settings'),
-  emitShortcut:     (action) => tauriEmit('shortcut', action),
-  emitCueJump:      (cueId) => tauriEmit('cue-jump', { cueId }),
+  getConfig:           () => tauriInvoke('get_config'),
+  setConfig:           (patch) => tauriInvoke('set_config', { patch }),
+  switchMode:          (mode) => tauriInvoke('switch_mode', { mode }),
+  onConfigUpdate:      (cb) => tauriListen('config-update', (e) => cb(e.payload)),
+  onActiveScript:      (cb) => tauriListen('active-script', (e) => cb(e.payload)),
+  onScrollProgress:    (cb) => tauriListen('scroll-progress', (e) => cb(e.payload)),
+  togglePrompter:      () => tauriInvoke('toggle_prompter'),
+  isPrompterVisible:   () => tauriInvoke('is_prompter_visible'),
+  resizeSettings:      (dims) => tauriInvoke('resize_settings', { dims }),
+  quit:                () => tauriInvoke('quit_app'),
+  openDevTools:        () => tauriInvoke('open_devtools'),
+  hideSettings:        () => tauriInvoke('hide_settings'),
+  emitShortcut:        (action) => tauriEmit('shortcut', action),
+  emitCueJump:         (cueId) => tauriEmit('cue-jump', { cueId }),
 }
 
 const SPEEDS = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
@@ -30,7 +31,7 @@ const Icons = {
 }
 
 export default function SettingsView() {
-  const [activeTab,    setActiveTab]    = useState('Prompter')
+  const [prompterVisible, setPrompterVisible] = useState(true)
   const [mode,         setMode]         = useState('notch')
   const [speedIdx,     setSpeedIdx]     = useState(3)
   const [fontSize,     setFontSize]     = useState(22)
@@ -54,6 +55,7 @@ export default function SettingsView() {
   }, [])
 
   useEffect(() => {
+    API.isPrompterVisible().then(v => { if (v != null) setPrompterVisible(v) })
     API.getConfig().then(cfg => { if (cfg) applyConfig(cfg) })
 
     let unlistenConfig, unlistenActiveScript, unlistenScrollProgress
@@ -102,25 +104,19 @@ export default function SettingsView() {
         <div className="s-header-left">
           <div className="s-app-icon">{Icons.Prompter}</div>
           <span className="s-app-name">Teleprompt</span>
+          {isRunning && <div className="s-live-badge">LIVE</div>}
         </div>
-        {isRunning && <div className="s-live-badge">LIVE</div>}
-      </div>
-
-      <div className="s-tabs">
-        {['Prompter', 'Script', 'Hotkeys'].map(tab => (
-          <button
-            key={tab}
-            className={`s-tab ${activeTab === tab ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab}
-          </button>
-        ))}
+        <button
+          className="s-visibility-btn"
+          onClick={() => API.togglePrompter().then(v => { if (v != null) setPrompterVisible(v) })}
+          title={prompterVisible ? 'Hide prompter window' : 'Show prompter window'}
+        >
+          {prompterVisible ? 'Hide' : 'Show'}
+        </button>
       </div>
 
       <div className="s-body">
-        {activeTab === 'Prompter' && (
-          <>
+        <>
             <div className="s-progress-row">
               <div className="s-progress-track">
                 <div className="s-progress-fill" style={{ width: `${scrollPct * 100}%`, transition: 'width 0.1s linear' }} />
@@ -232,8 +228,7 @@ export default function SettingsView() {
                 </div>
               </>
             )}
-          </>
-        )}
+        </>
       </div>
     </div>
   )

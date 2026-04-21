@@ -398,6 +398,11 @@ fn resize_prompter(app: AppHandle, state: State<AppState>, dims: serde_json::Val
 }
 
 #[tauri::command]
+fn is_prompter_visible(app: AppHandle) -> bool {
+    get_prompter(&app).and_then(|w| w.is_visible().ok()).unwrap_or(false)
+}
+
+#[tauri::command]
 fn toggle_prompter(app: AppHandle) -> Result<bool, String> {
     let Some(w) = get_prompter(&app) else { return Ok(false) };
     let visible = w.is_visible().unwrap_or(false);
@@ -693,7 +698,7 @@ pub fn run() {
             get_config, set_config, switch_mode,
             get_scripts, save_scripts,
             set_ignore_mouse, resize_prompter,
-            toggle_prompter, resize_settings,
+            toggle_prompter, is_prompter_visible, resize_settings,
             quit_app, open_devtools,
             hide_settings, start_drag,
             set_movable, move_window, get_window_pos,
