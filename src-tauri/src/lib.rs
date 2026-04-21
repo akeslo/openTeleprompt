@@ -536,7 +536,7 @@ fn toggle_passthrough(app: AppHandle, state: State<AppState>) -> bool {
         let effective = if is_classic { false } else { next };
         let _ = w.set_ignore_cursor_events(effective);
     }
-    let _ = app.emit_to("prompter", "passthrough-changed", next);
+    let _ = app.emit("passthrough-changed", next); // broadcast to all windows
     next
 }
 
@@ -826,7 +826,7 @@ pub fn run() {
                 Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::ArrowUp),
                 Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::ArrowDown),
                 Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyR),
-                Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyT),
+                Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyT),
             ];
             #[cfg(not(target_os = "windows"))]
             let shortcuts = vec![
@@ -838,8 +838,7 @@ pub fn run() {
                 Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::ArrowDown),
                 Shortcut::new(Some(Modifiers::SUPER   | Modifiers::SHIFT), Code::KeyR),
                 Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyR),
-                Shortcut::new(Some(Modifiers::SUPER   | Modifiers::SHIFT), Code::KeyT),
-                Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyT),
+                Shortcut::new(Some(Modifiers::SUPER | Modifiers::ALT), Code::KeyT),
             ];
 
             // Register shortcuts — skip any that are already taken by the OS
@@ -857,7 +856,7 @@ pub fn run() {
                                     let effective = if is_classic { false } else { next };
                                     let _ = w.set_ignore_cursor_events(effective);
                                 }
-                                let _ = app.emit_to("prompter", "passthrough-changed", next);
+                                let _ = app.emit("passthrough-changed", next);
                             }
                         }
                         _ => {
