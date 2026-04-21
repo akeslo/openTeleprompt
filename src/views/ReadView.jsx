@@ -5,62 +5,77 @@ import { API } from '../lib/api'
 import { createMicEngine, SPEEDS, SCROLL_SPEED_BASE } from '../lib/mic'
 
 export default function ReadView() {
-  const { scriptText, scriptDoc, config, setView } = useAppStore()
+  const { scriptText, scriptDoc, config, setView, startCueId, setStartCueId } = useAppStore()
   const tokens = scriptDoc ? tokenizeDoc(scriptDoc) : []
 
-  // Live config refs — updated whenever config changes, used inside RAF/mic without remount
   const configRef = useRef(config)
   useEffect(() => { configRef.current = config }, [config])
 
-  // Local state for everything playback-related (avoids stale closure issues)
-  const [isPaused, setIsPaused] = useState(false)
+  const [isPaused,   setIsPaused]   = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
-  const [speedIdx, setSpeedIdx] = useState(
+  const [speedIdx,   setSpeedIdx]   = useState(
     SPEEDS.indexOf(config.scrollSpeed) !== -1 ? SPEEDS.indexOf(config.scrollSpeed) : 3
   )
-  const [fontSize, setFontSize] = useState(config.fontSize || 16)
-  const [micStatus, setMicStatus] = useState('Waiting…')
+  const [fontSize,   setFontSize]   = useState(config.fontSize || 16)
+  const [micStatus,  setMicStatus]  = useState('Waiting…')
 
-  // Refs for values used inside RAF/interval (must not be stale)
-  const isPausedRef = useRef(false)
-  const isSpeakingRef = useRef(false)
-  const isHoverPausedRef = useRef(false)
-  const speedIdxRef = useRef(speedIdx)
-  const scrollPosRef = useRef(0)
-  const lastFrameRef = useRef(0)
-  const rafRef = useRef(null)
-  const scrollVPRef = useRef(null)
-  const scriptTextRef = useRef(null)
-  const markerRefs = useRef({})     // token index → DOM el
-  const firedMarkers = useRef(new Set()) // indices already fired
-  const speedIdxSetRef = useRef(null) // ref to setSpeedIdx for use inside RAF
-  const micEngineRef = useRef(null)
-  const silenceTimer = useRef(null)
-  const isCountingDownRef = useRef(false)
+  const isPausedRef        = useRef(false)
+  const isSpeakingRef      = useRef(false)
+  const isHoverPausedRef   = useRef(false)
+  const speedIdxRef        = useRef(speedIdx)
+  const scrollPosRef       = useRef(0)
+  const lastFrameRef       = useRef(0)
+  const rafRef             = useRef(null)
+  const scrollVPRef        = useRef(null)
+  const scriptTextRef      = useRef(null)
+  const markerRefs         = useRef({})
+  const headingRefs        = useRef({})
+  const firedMarkers       = useRef(new Set())
+  const micEngineRef       = useRef(null)
+  const prevMicDeviceIdRef = useRef(config.micDeviceId)
+  const frameCountRef      = useRef(0)
 
-  // Keep refs in sync
-  useEffect(() => { isPausedRef.current = isPaused }, [isPaused])
+  useEffect(() => { isPausedRef.current  = isPaused  }, [isPaused])
   useEffect(() => { isSpeakingRef.current = isSpeaking }, [isSpeaking])
-  useEffect(() => { speedIdxRef.current = speedIdx }, [speedIdx])
+  useEffect(() => { speedIdxRef.current  = speedIdx  }, [speedIdx])
 
-  // React to live config changes while ReadView is mounted
+  function emitScrollProgress(isRunning) {
+    const maxScroll = scriptTextRef.current
+      ? scriptTextRef.current.scrollHeight - (scrollVPRef.current?.clientHeight ?? 0)
+      : 1
+    const pct = maxScroll > 0 ? Math.min(scrollPosRef.current / maxScroll, 1) : 0
+    window.__TAURI__?.event?.emit('scroll-progress', {
+      pct,
+      isRunning,
+      isPaused: isPausedRef.current,
+    })
+  }
+
+  function seekToCue(cueId) {
+    const el = headingRefs.current[cueId]
+    if (!el || !scrollVPRef.current || !scriptTextRef.current) return
+    const maxScroll = scriptTextRef.current.scrollHeight - scrollVPRef.current.clientHeight
+    scrollPosRef.current = Math.min(el.offsetTop, maxScroll)
+    if (scriptTextRef.current) {
+      scriptTextRef.current.style.transform = `translateY(${-scrollPosRef.current}px)`
+    }
+    firedMarkers.current.clear()
+  }
+
   useEffect(() => {
-    // Opacity applied globally in App.jsx already
-    // Sync speed from settings — use closest match to handle float precision
     if (config.scrollSpeed !== undefined) {
       const i = SPEEDS.reduce((best, s, idx) =>
         Math.abs(s - config.scrollSpeed) < Math.abs(SPEEDS[best] - config.scrollSpeed) ? idx : best
       , 0)
       setSpeedIdx(i)
     }
-    // Threshold update
     micEngineRef.current?.setThreshold(config.threshold)
-    // If mic device changed, restart mic
-    if (configRef.current.micDeviceId !== config.micDeviceId) {
+    if (prevMicDeviceIdRef.current !== config.micDeviceId) {
+      prevMicDeviceIdRef.current = config.micDeviceId
       micEngineRef.current?.stop()
       const engine = createMicEngine({
         threshold: config.threshold,
-        onSpeaking: () => { isSpeakingRef.current = true; setIsSpeaking(true); setMicStatus('Speaking') },
+        onSpeaking: () => { isSpeakingRef.current = true;  setIsSpeaking(true);  setMicStatus('Speaking') },
         onSilence:  () => { isSpeakingRef.current = false; setIsSpeaking(false); setMicStatus('Waiting…') },
         onError:    () => setMicStatus('Mic error'),
       })
@@ -69,14 +84,18 @@ export default function ReadView() {
     }
   }, [config.threshold, config.micDeviceId, config.autoScroll, config.scrollSpeed])
 
-  // On mount: set content, start mic, start scroll loop
   useEffect(() => {
-    // Cue marker checker — fires actions when markers enter reading zone
+    if (startCueId >= 0) {
+      requestAnimationFrame(() => {
+        seekToCue(startCueId)
+        setStartCueId(-1)
+      })
+    }
+
     function checkMarkers() {
       if (!scrollVPRef.current) return
       const vpRect = scrollVPRef.current.getBoundingClientRect()
       const readingZoneBottom = vpRect.top + vpRect.height * 0.4
-
       Object.entries(markerRefs.current).forEach(([idxStr, el]) => {
         if (!el) return
         const idx = Number(idxStr)
@@ -86,23 +105,11 @@ export default function ReadView() {
           firedMarkers.current.add(idx)
           const marker = el.dataset.marker
           if (marker === 'PAUSE') {
-            isPausedRef.current = true
-            setIsPaused(true)
-            setMicStatus('Paused')
-            setTimeout(() => {
-              isPausedRef.current = false
-              setIsPaused(false)
-              setMicStatus('Waiting…')
-            }, 1200)
+            isPausedRef.current = true; setIsPaused(true); setMicStatus('Paused')
+            setTimeout(() => { isPausedRef.current = false; setIsPaused(false); setMicStatus('Waiting…') }, 1200)
           } else if (marker === 'BREATHE') {
-            isPausedRef.current = true
-            setIsPaused(true)
-            setMicStatus('Breathe…')
-            setTimeout(() => {
-              isPausedRef.current = false
-              setIsPaused(false)
-              setMicStatus('Waiting…')
-            }, 2500)
+            isPausedRef.current = true; setIsPaused(true); setMicStatus('Breathe…')
+            setTimeout(() => { isPausedRef.current = false; setIsPaused(false); setMicStatus('Waiting…') }, 2500)
           } else if (marker === 'SLOW') {
             setSpeedIdx(prev => {
               const n = Math.max(0, prev - 1)
@@ -114,7 +121,6 @@ export default function ReadView() {
       })
     }
 
-    // Start scroll RAF
     function loop(ts) {
       const paused = isPausedRef.current || isHoverPausedRef.current
       const shouldScroll = configRef.current.autoScroll ? !paused : (isSpeakingRef.current && !paused)
@@ -128,27 +134,29 @@ export default function ReadView() {
           scrollPosRef.current = Math.min(scrollPosRef.current, maxScroll)
           scriptTextRef.current.style.transform = `translateY(${-scrollPosRef.current}px)`
         }
-        // Check cue markers in reading zone (top 40% of viewport)
         checkMarkers()
       } else {
         lastFrameRef.current = 0
       }
+
+      frameCountRef.current++
+      if (frameCountRef.current % 6 === 0) emitScrollProgress(true)
+
       rafRef.current = requestAnimationFrame(loop)
     }
     rafRef.current = requestAnimationFrame(loop)
 
-    // Start mic
     const engine = createMicEngine({
       threshold: configRef.current.threshold,
-      onSpeaking: () => { isSpeakingRef.current = true; setIsSpeaking(true); setMicStatus('Speaking') },
+      onSpeaking: () => { isSpeakingRef.current = true;  setIsSpeaking(true);  setMicStatus('Speaking') },
       onSilence:  () => { isSpeakingRef.current = false; setIsSpeaking(false); setMicStatus('Waiting…') },
       onError:    () => setMicStatus('Mic error'),
     })
     micEngineRef.current = engine
     engine.start(configRef.current.micDeviceId)
 
-    // Shortcuts — capture unlisten fn for cleanup
-    let unlistenShortcut
+    let unlistenShortcut, unlistenCueJump
+
     API.onShortcut((action) => {
       if (action === 'pause') togglePause()
       if (action === 'faster') setSpeedIdx(i => Math.min(SPEEDS.length - 1, i + 1))
@@ -156,15 +164,21 @@ export default function ReadView() {
       if (action === 'reset') {
         scrollPosRef.current = 0
         if (scriptTextRef.current) scriptTextRef.current.style.transform = 'translateY(0px)'
+        firedMarkers.current.clear()
       }
       if (action === 'stop') handleDone()
     }).then(fn => { unlistenShortcut = fn })
 
+    window.__TAURI__?.event?.listen('cue-jump', (e) => {
+      seekToCue(e.payload.cueId)
+    }).then(fn => { unlistenCueJump = fn })
+
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
-      if (silenceTimer.current) clearTimeout(silenceTimer.current)
       micEngineRef.current?.stop()
       unlistenShortcut?.()
+      unlistenCueJump?.()
+      emitScrollProgress(false)
     }
   }, [])
 
@@ -178,23 +192,18 @@ export default function ReadView() {
 
   function handleDone() {
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    if (silenceTimer.current) clearTimeout(silenceTimer.current)
     micEngineRef.current?.stop()
     API.setIgnoreMouse(false)
-    setView('idle') // App.jsx resize effect handles window resize on view change
+    setView('idle')
   }
 
   function handleReset() {
     scrollPosRef.current = 0
     if (scriptTextRef.current) scriptTextRef.current.style.transform = 'translateY(0px)'
-    firedMarkers.current.clear() // reset so markers fire again on replay
+    firedMarkers.current.clear()
   }
 
-  function handleMouseEnter() {
-    isHoverPausedRef.current = true
-    setMicStatus('Hover pause')
-  }
-
+  function handleMouseEnter() { isHoverPausedRef.current = true; setMicStatus('Hover pause') }
   function handleMouseLeave() {
     isHoverPausedRef.current = false
     if (!isPausedRef.current) setMicStatus(isSpeakingRef.current ? 'Speaking' : 'Waiting…')
@@ -212,10 +221,7 @@ export default function ReadView() {
 
   return (
     <div
-      style={{
-        position: 'absolute', inset: 0,
-        display: 'flex', flexDirection: 'column',
-      }}
+      style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -234,6 +240,15 @@ export default function ReadView() {
         >
           {tokens.length > 0 ? tokens.map((token, i) => {
             if (token.type === 'newline') return <br key={i} />
+            if (token.type === 'heading') return (
+              <div
+                key={i}
+                ref={el => { headingRefs.current[token.id] = el }}
+                className={`read-heading read-heading-${token.level}`}
+              >
+                {token.text}
+              </div>
+            )
             if (token.type === 'marker') return (
               <span
                 key={i}
@@ -245,13 +260,7 @@ export default function ReadView() {
               </span>
             )
             return (
-              <span
-                key={i}
-                style={{
-                  fontWeight: token.bold ? 700 : undefined,
-                  color: token.color || undefined,
-                }}
-              >
+              <span key={i} style={{ fontWeight: token.bold ? 700 : undefined, color: token.color || undefined }}>
                 {token.text}{' '}
               </span>
             )
@@ -261,9 +270,7 @@ export default function ReadView() {
 
       <div id="read-controls">
         <div className="ctrl-left">
-          <span className={micRingClass}>
-            <span className="mic-core" />
-          </span>
+          <span className={micRingClass}><span className="mic-core" /></span>
           <span id="status-text">{micStatus}</span>
         </div>
         <div className="ctrl-right">
