@@ -303,7 +303,6 @@ fn set_config(app: AppHandle, state: State<AppState>, patch: serde_json::Value) 
 
     if let Some(w) = get_prompter(&app) {
         apply_screenshare_mode(&w, cfg_clone.screenshare_hidden);
-        let _ = w.set_opacity(cfg_clone.opacity);
     }
     let _ = app.emit("config-update", &cfg_clone);
 }

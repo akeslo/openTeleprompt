@@ -30,6 +30,10 @@ export default function App() {
   const viewRef = useRef(view)
   useEffect(() => { viewRef.current = view }, [view])
 
+  useEffect(() => {
+    document.documentElement.style.opacity = config.opacity ?? 1
+  }, [config.opacity])
+
   // ── Bootstrap ──────────────────────────────────────────────
   useEffect(() => {
     // Load config
