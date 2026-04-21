@@ -49,12 +49,19 @@ body {
 .s-header-left { display: flex; align-items: center; gap: 8px; }
 .s-app-icon { display: flex; align-items: center; justify-content: center; }
 .s-app-name { font-size: 14px; font-weight: 700; }
+.s-header-actions { display: flex; align-items: center; gap: 6px; }
 .s-visibility-btn {
   background: var(--s-btn-bg); border: none; color: var(--s-text);
   font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 6px;
   cursor: pointer; transition: background 0.15s; white-space: nowrap;
 }
 .s-visibility-btn:hover { background: var(--s-btn-hover); }
+.s-quit-btn {
+  background: transparent; border: none; color: var(--s-muted);
+  font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 6px;
+  cursor: pointer; transition: color 0.15s, background 0.15s; white-space: nowrap;
+}
+.s-quit-btn:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
 
 .s-live-badge { 
   background: rgba(239,68,68,0.15); color: var(--s-live); 

@@ -104,13 +104,18 @@ export default function SettingsView() {
           <span className="s-app-name">Teleprompt</span>
           {isRunning && <div className="s-live-badge">LIVE</div>}
         </div>
-        <button
-          className="s-visibility-btn"
-          onClick={() => API.togglePrompter().then(v => { if (v != null) setPrompterVisible(v) })}
-          title={prompterVisible ? 'Hide prompter window' : 'Show prompter window'}
-        >
-          {prompterVisible ? 'Hide' : 'Show'}
-        </button>
+        <div className="s-header-actions">
+          <button
+            className="s-visibility-btn"
+            onClick={() => API.togglePrompter().then(v => { if (v != null) setPrompterVisible(v) })}
+            title={prompterVisible ? 'Hide prompter window' : 'Show prompter window'}
+          >
+            {prompterVisible ? 'Hide' : 'Show'}
+          </button>
+          <button className="s-quit-btn" onClick={() => API.quit()} title="Quit Teleprompt">
+            Quit
+          </button>
+        </div>
       </div>
 
       <div className="s-body">
