@@ -113,14 +113,15 @@ impl Default for Config {
 
 // ── Script ─────────────────────────────────────────────────
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Script {
     pub name: String,
     pub text: String,
     #[serde(default)]
     pub content: String, // Tiptap JSON string
-    #[serde(default)]
+    #[serde(default, alias = "file_path")]
     pub file_path: String, // absolute path if loaded from file, empty otherwise
-    #[serde(default)]
+    #[serde(default, alias = "file_ext")]
     pub file_ext: String,  // "txt" or "md"
 }
 
