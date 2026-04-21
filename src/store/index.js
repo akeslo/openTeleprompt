@@ -8,6 +8,9 @@ export const useAppStore = create((set, get) => ({
     mode: 'notch',
     scrollSpeed: 1,
     fontSize: 16,
+    textAlign: 'center',
+    mirrorText: false,
+    eyeLineGuide: false,
     opacity: 1,
     threshold: 0.018,
     autoScroll: false,
@@ -37,4 +40,10 @@ export const useAppStore = create((set, get) => ({
 
   speedIndex: 3,
   setSpeedIndex: (i) => set({ speedIndex: i }),
+
+  // Cue navigation
+  startCueId: -1,
+  setStartCueId: (id) => set({ startCueId: id }),
+  cues: [],
+  setCues: (cues) => set({ cues }),
 }))
