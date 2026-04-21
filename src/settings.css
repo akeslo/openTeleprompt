@@ -181,6 +181,17 @@ body {
 .s-switch input:checked + .s-sw { background: #fff; }
 .s-switch input:checked + .s-sw::before { transform: translateX(16px); background: #000; }
 
+/* Select */
+.s-select {
+  width: 100%; padding: 7px 10px;
+  background: var(--s-btn-bg); border: 1px solid var(--s-border);
+  border-radius: 6px; color: var(--s-text);
+  font-size: 12px; font-family: inherit;
+  outline: none; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+}
+.s-select:hover { background: var(--s-btn-hover); }
+
 /* Cue List */
 .s-cue-list { display: flex; flex-direction: column; gap: 4px; }
 .s-cue-item {

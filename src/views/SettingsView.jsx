@@ -42,6 +42,8 @@ export default function SettingsView() {
   const [isPaused,   setIsPaused]   = useState(false)
   const [scrollPct,  setScrollPct]  = useState(0)
   const [activeCues, setActiveCues] = useState([])
+  const [micDeviceId,  setMicDeviceId]  = useState('default')
+  const [micDevices,   setMicDevices]   = useState([])
 
   const panelRef = useRef(null)
 
@@ -58,6 +60,11 @@ export default function SettingsView() {
   useEffect(() => {
     API.isPrompterVisible().then(v => { if (v != null) setPrompterVisible(v) })
     API.getConfig().then(cfg => { if (cfg) applyConfig(cfg) })
+
+    navigator.mediaDevices?.getUserMedia({ audio: true })
+      .then(s => { s.getTracks().forEach(t => t.stop()); return navigator.mediaDevices.enumerateDevices() })
+      .then(devs => setMicDevices(devs.filter(d => d.kind === 'audioinput')))
+      .catch(() => {})
 
     let unlistenConfig, unlistenActiveScript, unlistenScrollProgress
 
@@ -92,6 +99,7 @@ export default function SettingsView() {
     if (c.opacity != null) setOpacity(c.opacity)
     if (c.screenshareHidden != null) setScreenshareHidden(c.screenshareHidden)
     if (c.autoScroll != null) setAutoScroll(c.autoScroll)
+    if (c.micDeviceId) setMicDeviceId(c.micDeviceId)
     if (c.scrollSpeed != null) {
       const i = SPEEDS.indexOf(c.scrollSpeed)
       setSpeedIdx(i !== -1 ? i : 3)
@@ -221,6 +229,23 @@ export default function SettingsView() {
                 ))}
               </div>
             </div>
+
+            {micDevices.length > 1 && (
+              <div className="s-setting-row">
+                <span className="s-label">Microphone</span>
+                <select className="s-select" value={micDeviceId} onChange={e => {
+                  setMicDeviceId(e.target.value)
+                  setConfig({ micDeviceId: e.target.value })
+                }}>
+                  <option value="default">System Default</option>
+                  {micDevices.map(d => (
+                    <option key={d.deviceId} value={d.deviceId}>
+                      {d.label || `Mic ${d.deviceId.slice(0, 6)}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="s-setting-row s-flex-row">
               <div className="s-row-left">
