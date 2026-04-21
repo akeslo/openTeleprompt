@@ -191,23 +191,15 @@ body.mode-classic #island:not(.state-edit):not(.state-read):hover {
   height: 36px;
   border-radius: 18px;
 }
-body.mode-classic #island.state-edit {
-  top: 0;
-  left: 0;
-  transform: none;
-  width: 540px;
-  height: 320px;
-  border-radius: 16px;
-  /* box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 2px 12px rgba(0,0,0,0.4); */
-}
+body.mode-classic #island.state-edit,
 body.mode-classic #island.state-read {
   top: 0;
   left: 0;
   transform: none;
-  width: 420px;
-  height: 200px;
+  width: 100vw;
+  height: 100vh;
   border-radius: 16px;
-  /* box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 2px 12px rgba(0,0,0,0.4); */
+  transition: border-radius 0.4s cubic-bezier(0.32, 0.72, 0, 1);
 }
 /* Hide notch corners in classic mode — they only make sense for notch */
 body.mode-classic .notch-corner {
