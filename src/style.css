@@ -403,6 +403,10 @@ body.mode-classic .idle-chevron {
   font-size: 9px; padding: 0; line-height: 1;
 }
 .script-del:hover { color: #ef4444; }
+.script-file-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #4ade80; flex-shrink: 0;
+}
 
 #script-input {
   flex: 1; background: transparent; border: none;

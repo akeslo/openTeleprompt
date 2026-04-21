@@ -116,9 +116,18 @@ export default function EditView() {
       const tiptapDoc = editor.getJSON()
       const plainText = editor.getText().trim()
       const newScript = { name: fileName, text: plainText, content: JSON.stringify(tiptapDoc), filePath: path, fileExt: ext }
-      const updated = [...scripts, newScript]
+      const existingIdx = scripts.findIndex(s => s.filePath && s.filePath === path)
+      let updated, targetIdx
+      if (existingIdx !== -1) {
+        updated = [...scripts]
+        updated[existingIdx] = newScript
+        targetIdx = existingIdx
+      } else {
+        updated = [...scripts, newScript]
+        targetIdx = updated.length - 1
+      }
       setScripts(updated)
-      setCurrentScriptIndex(updated.length - 1)
+      setCurrentScriptIndex(targetIdx)
       API.saveScripts(updated)
       setStats(computeStats(plainText))
       emitActiveScript(tiptapDoc)
@@ -217,7 +226,8 @@ export default function EditView() {
       {scripts.length > 0 && (
         <div id="script-list">
           {scripts.map((s, i) => (
-            <div key={i} className={`script-item${i === currentScriptIndex ? ' active' : ''}`}>
+            <div key={i} className={`script-item${i === currentScriptIndex ? ' active' : ''}`} title={s.filePath || undefined}>
+              {s.filePath && <span className="script-file-dot" aria-label="Linked to file" />}
               <span className="script-name" onClick={() => loadScript(i)}>{s.name}</span>
               <button className="script-del" onClick={(e) => deleteScript(e, i)}>✕</button>
             </div>
