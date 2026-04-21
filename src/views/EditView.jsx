@@ -235,9 +235,9 @@ export default function EditView() {
         <button
           className={`pill-btn ghost${config.autoScroll ? ' active' : ''}`}
           onClick={() => { const v = !config.autoScroll; setConfig({ autoScroll: v }); API.setConfig({ autoScroll: v }) }}
-          title={config.autoScroll ? 'Auto-scroll on' : 'Voice-activated scroll'}
+          title={config.autoScroll ? 'Switch to voice-activated scroll' : 'Switch to auto-scroll'}
           aria-label="Toggle auto-scroll"
-        >{config.autoScroll ? 'Auto' : 'Voice'}</button>
+        >{config.autoScroll ? 'Auto-scroll' : 'Voice'}</button>
         <button className="pill-btn ghost" onClick={handleNew}>+ New</button>
         <button className="pill-btn ghost" onClick={handleOpenFile} disabled={isOpening} aria-label="Open file">
           {isOpening ? '…' : openError ? 'Error' : 'Open'}
