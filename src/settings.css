@@ -193,10 +193,16 @@ body {
 .s-select:hover { background: var(--s-btn-hover); }
 
 /* Cue List */
-.s-cue-list { display: flex; flex-direction: column; gap: 4px; }
+.s-cue-list {
+  display: flex; flex-direction: column; gap: 2px;
+  max-height: 180px; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+.s-cue-list::-webkit-scrollbar { width: 4px; }
+.s-cue-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
 .s-cue-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 8px 12px; border-radius: 6px; transition: background 0.15s;
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 10px; border-radius: 6px; transition: background 0.15s;
 }
 .s-cue-item.active { background: var(--s-card-bg); }
 .s-cue-id { font-size: 10px; font-weight: 800; color: var(--s-muted); }
