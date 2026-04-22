@@ -84,8 +84,6 @@ pub struct Config {
     pub font_size: f64,
     #[serde(default = "default_text_align")]
     pub text_align: String,
-    #[serde(default)]
-    pub mirror_text: bool,
 }
 
 fn default_text_align() -> String { "center".to_string() }
@@ -103,7 +101,6 @@ impl Default for Config {
             theme: "dark".to_string(),
             font_size: 24.0,
             text_align: "center".to_string(),
-            mirror_text: false,
         }
     }
 }
@@ -295,7 +292,6 @@ fn set_config(app: AppHandle, state: State<AppState>, patch: serde_json::Value) 
     if let Some(v) = patch.get("theme").and_then(|v| v.as_str()) { cfg.theme = v.to_string(); }
     if let Some(v) = patch.get("fontSize").and_then(|v| v.as_f64()) { cfg.font_size = v; }
     if let Some(v) = patch.get("textAlign").and_then(|v| v.as_str()) { cfg.text_align = v.to_string(); }
-    if let Some(v) = patch.get("mirrorText").and_then(|v| v.as_bool()) { cfg.mirror_text = v; }
 
     let cfg_clone = cfg.clone();
     save_config(&cfg_clone);
@@ -489,8 +485,6 @@ fn open_devtools(app: AppHandle) {
     if let Some(w) = get_prompter(&app) { w.open_devtools(); }
 }
 
-#[tauri::command]
-fn set_movable(_app: AppHandle, _movable: bool) -> Result<(), String> { Ok(()) }
 
 #[tauri::command]
 fn move_window(app: AppHandle, pos: serde_json::Value) -> Result<(), String> {
@@ -536,7 +530,8 @@ fn toggle_passthrough(app: AppHandle, state: State<AppState>) -> bool {
         let effective = if is_classic { false } else { next };
         let _ = w.set_ignore_cursor_events(effective);
     }
-    let _ = app.emit("passthrough-changed", next); // broadcast to all windows
+    let _ = app.emit_to("prompter", "passthrough-changed", next);
+    let _ = app.emit_to("settings", "passthrough-changed", next);
     next
 }
 
@@ -548,11 +543,6 @@ fn hide_settings(app: AppHandle) {
 #[tauri::command]
 fn open_settings(app: AppHandle) {
     show_settings(&app);
-}
-
-#[tauri::command]
-fn open_url(_app: AppHandle, url: String) {
-    let _ = open::that(url);
 }
 
 // ── Window creation ────────────────────────────────────────
@@ -604,6 +594,7 @@ fn create_prompter_window(app: &AppHandle) {
     .position(x, y)
     .visible_on_all_workspaces(true)
     .content_protected(false)
+    .visible(!is_notch)
     .build();
 
     let window = match window {
@@ -621,6 +612,7 @@ fn create_prompter_window(app: &AppHandle) {
     if is_notch {
         eprintln!("[OT] calling elevate_to_notch_level");
         elevate_to_notch_level(&window);
+        window.show().ok();
     }
 
 
@@ -716,8 +708,8 @@ pub fn run() {
             toggle_prompter, is_prompter_visible, resize_settings,
             quit_app, open_devtools,
             hide_settings, start_drag, relay_shortcut, toggle_passthrough,
-            set_movable, move_window, get_window_pos,
-            open_url, open_settings,
+            move_window, get_window_pos,
+            open_settings,
             focus_prompter, elevate_notch_window,
             open_file, save_file,
             ])        .setup(|app| {
@@ -758,6 +750,7 @@ pub fn run() {
             .position(x, y)
             .visible_on_all_workspaces(true)
             .content_protected(false)
+            .visible(!is_notch)
             .build()?;
 
             eprintln!("[OT] setup: prompter window built, is_notch={is_notch}");
@@ -765,6 +758,7 @@ pub fn run() {
             // Elevate above menu bar in notch mode (must be on main thread)
             if is_notch {
                 elevate_to_notch_level(&prompter);
+                prompter.show().ok();
             }
 
             if cfg.screenshare_hidden {
@@ -856,7 +850,8 @@ pub fn run() {
                                     let effective = if is_classic { false } else { next };
                                     let _ = w.set_ignore_cursor_events(effective);
                                 }
-                                let _ = app.emit("passthrough-changed", next);
+                                let _ = app.emit_to("prompter", "passthrough-changed", next);
+                                let _ = app.emit_to("settings", "passthrough-changed", next);
                             }
                         }
                         _ => {

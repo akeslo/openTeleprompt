@@ -14,7 +14,6 @@ export const API = {
   resizeSettings: (dims) => tauriInvoke('resize_settings', { dims }),
   quit: () => tauriInvoke('quit_app'),
   openDevTools: () => tauriInvoke('open_devtools'),
-  setMovable: (v) => tauriInvoke('set_movable', { movable: v }),
   moveWindow: (pos) => tauriInvoke('move_window', { pos }),
   getWindowPos: () => tauriInvoke('get_window_pos'),
   startDrag: () => tauriInvoke('start_drag'),

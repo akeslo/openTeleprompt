@@ -46,6 +46,8 @@ export default function SettingsView() {
   const [micDeviceId,   setMicDeviceId]  = useState('default')
   const [micDevices,    setMicDevices]   = useState([])
   const [isPassThrough, setIsPassThrough] = useState(false)
+  const [threshold,     setThreshold]    = useState(0.018)
+  const [textAlign,     setTextAlign]    = useState('center')
 
   const panelRef = useRef(null)
 
@@ -106,6 +108,8 @@ export default function SettingsView() {
     if (c.screenshareHidden != null) setScreenshareHidden(c.screenshareHidden)
     if (c.autoScroll != null) setAutoScroll(c.autoScroll)
     if (c.micDeviceId) setMicDeviceId(c.micDeviceId)
+    if (c.threshold != null) setThreshold(c.threshold)
+    if (c.textAlign)  setTextAlign(c.textAlign)
     if (c.scrollSpeed != null) {
       const i = SPEEDS.indexOf(c.scrollSpeed)
       setSpeedIdx(i !== -1 ? i : 3)
@@ -220,6 +224,19 @@ export default function SettingsView() {
             </div>
 
             <div className="s-setting-row">
+              <span className="s-label">Text align</span>
+              <div className="s-segmented">
+                {[['Left', 'left'], ['Center', 'center'], ['Right', 'right']].map(([label, val]) => (
+                  <button
+                    key={val}
+                    className={`s-seg-btn ${textAlign === val ? 'active' : ''}`}
+                    onClick={() => { setTextAlign(val); setConfig({ textAlign: val }) }}
+                  >{label}</button>
+                ))}
+              </div>
+            </div>
+
+            <div className="s-setting-row">
               <span className="s-label">Style</span>
               <div className="s-segmented">
                 {['notch', 'classic'].map(m => (
@@ -236,6 +253,23 @@ export default function SettingsView() {
                 ))}
               </div>
             </div>
+
+            {!autoScroll && (
+              <div className="s-setting-row">
+                <div className="s-row-info">
+                  <span className="s-label">Mic sensitivity</span>
+                  <span className="s-val">{Math.round(threshold * 1000)}</span>
+                </div>
+                <input type="range" className="s-slider" min="5" max="50" step="1"
+                  value={Math.round(threshold * 1000)}
+                  onChange={e => {
+                    const val = +e.target.value / 1000
+                    setThreshold(val)
+                    setConfig({ threshold: val })
+                  }}
+                />
+              </div>
+            )}
 
             {micDevices.length > 1 && (
               <div className="s-setting-row">

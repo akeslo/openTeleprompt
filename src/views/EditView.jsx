@@ -42,10 +42,16 @@ export default function EditView() {
   const [stats, setStats] = useState('')
   const [isPassThrough, setIsPassThrough] = useState(false)
 
+  useEffect(() => {
+    let unlisten
+    window.__TAURI__?.event?.listen('passthrough-changed', (e) => {
+      setIsPassThrough(e.payload)
+    }).then(fn => { unlisten = fn })
+    return () => unlisten?.()
+  }, [])
+
   function togglePassThrough() {
-    const next = !isPassThrough
-    setIsPassThrough(next)
-    API.setIgnoreMouse(next)
+    API.togglePassThrough()
   }
   const [saveFlash, setSaveFlash] = useState(false)
   const [isOpening, setIsOpening] = useState(false)

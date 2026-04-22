@@ -259,12 +259,15 @@ export default function ReadView() {
 
   const micRingClass = `mic-ring${isSpeaking ? '' : micStatus === 'Mic error' ? ' error' : ' paused'}`
 
+  const isClassic = config.mode === 'classic'
+
   return (
     <div
       style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
+      {isClassic && <ResizeHandles />}
       <div id="progress-bar" ref={progressBarRef} />
 
       <div
@@ -276,7 +279,7 @@ export default function ReadView() {
         <div
           ref={scriptTextRef}
           id="script-text"
-          style={{ fontSize: `${fontSize}px` }}
+          style={{ fontSize: `${fontSize}px`, textAlign: config.textAlign || 'center' }}
         >
           {tokens.length > 0 ? tokens.map((token, i) => {
             if (token.type === 'newline') {
@@ -340,4 +343,28 @@ export default function ReadView() {
       </div>
     </div>
   )
+}
+
+const RESIZE_DIRS = [
+  { dir: 'North',     style: { top: 0, left: 6, right: 6, height: 6, cursor: 'n-resize' } },
+  { dir: 'South',     style: { bottom: 0, left: 6, right: 6, height: 6, cursor: 's-resize' } },
+  { dir: 'West',      style: { left: 0, top: 6, bottom: 6, width: 6, cursor: 'w-resize' } },
+  { dir: 'East',      style: { right: 0, top: 6, bottom: 6, width: 6, cursor: 'e-resize' } },
+  { dir: 'NorthWest', style: { top: 0, left: 0, width: 10, height: 10, cursor: 'nw-resize' } },
+  { dir: 'NorthEast', style: { top: 0, right: 0, width: 10, height: 10, cursor: 'ne-resize' } },
+  { dir: 'SouthWest', style: { bottom: 0, left: 0, width: 10, height: 10, cursor: 'sw-resize' } },
+  { dir: 'SouthEast', style: { bottom: 0, right: 0, width: 10, height: 10, cursor: 'se-resize' } },
+]
+
+function ResizeHandles() {
+  function startResize(dir) {
+    window.__TAURI__?.webviewWindow?.getCurrentWebviewWindow()?.startResizeDrag(dir)
+  }
+  return RESIZE_DIRS.map(({ dir, style }) => (
+    <div
+      key={dir}
+      style={{ position: 'absolute', zIndex: 9999, ...style }}
+      onMouseDown={() => startResize(dir)}
+    />
+  ))
 }
