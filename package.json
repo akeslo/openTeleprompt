@@ -9,12 +9,18 @@
     "dev:react": "vite",
     "build": "tauri build",
     "build:frontend": "vite build",
-    "build:win": "tauri build --target x86_64-pc-windows-msvc"
+    "build:win": "tauri build --target x86_64-pc-windows-msvc",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@vitejs/plugin-react": "^6.0.1",
-    "vite": "^8.0.7"
+    "jsdom": "^29.1.1",
+    "vite": "^8.0.7",
+    "vitest": "^4.1.10"
   },
   "dependencies": {
     "@tiptap/extension-color": "^3.22.3",
