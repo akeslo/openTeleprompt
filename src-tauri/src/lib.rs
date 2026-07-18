@@ -257,6 +257,24 @@ fn apply_screenshare_mode(window: &WebviewWindow, hidden: bool) {
     let _ = window.set_content_protected(hidden);
 }
 
+/// Pure passthrough-toggle decision logic, shared by the `toggle_passthrough` Tauri
+/// command and the Ctrl/Super+Shift+T global-shortcut handler. Flips `passthrough`
+/// and returns `(next, effective)`:
+/// - `next` — the new stored passthrough value (always broadcast to both windows).
+/// - `effective` — what should actually be applied via `set_ignore_cursor_events`.
+///   In classic mode this is forced to `false` regardless of `next`, so buttons
+///   remain clickable (see the classic-mode click-through invariant in CLAUDE.md).
+///
+/// Operates only on the `AtomicBool` state — no `AppHandle`/window registry needed,
+/// so it's directly unit-testable. Callers own applying `effective` to the window
+/// and emitting the `passthrough-changed` event with `next`.
+fn toggle_passthrough_state(passthrough: &AtomicBool, is_classic: bool) -> (bool, bool) {
+    let next = !passthrough.load(Ordering::Relaxed);
+    passthrough.store(next, Ordering::Relaxed);
+    let effective = if is_classic { false } else { next };
+    (next, effective)
+}
+
 // ── Commands ───────────────────────────────────────────────
 
 // Called from JS after window mounts — runs on Tauri's main thread dispatcher
@@ -524,10 +542,8 @@ fn relay_shortcut(app: AppHandle, action: String) {
 #[tauri::command]
 fn toggle_passthrough(app: AppHandle, state: State<AppState>) -> bool {
     let is_classic = state.config.lock().unwrap().mode == "classic";
-    let next = !state.passthrough.load(Ordering::Relaxed);
-    state.passthrough.store(next, Ordering::Relaxed);
+    let (next, effective) = toggle_passthrough_state(&state.passthrough, is_classic);
     if let Some(w) = get_prompter(&app) {
-        let effective = if is_classic { false } else { next };
         let _ = w.set_ignore_cursor_events(effective);
     }
     let _ = app.emit_to("prompter", "passthrough-changed", next);
@@ -844,10 +860,8 @@ pub fn run() {
                             // Toggle passthrough in Rust — works even when JS ignores mouse events
                             if let Some(st) = app.try_state::<AppState>() {
                                 let is_classic = st.config.lock().unwrap().mode == "classic";
-                                let next = !st.passthrough.load(Ordering::Relaxed);
-                                st.passthrough.store(next, Ordering::Relaxed);
+                                let (next, effective) = toggle_passthrough_state(&st.passthrough, is_classic);
                                 if let Some(w) = get_prompter(app) {
-                                    let effective = if is_classic { false } else { next };
                                     let _ = w.set_ignore_cursor_events(effective);
                                 }
                                 let _ = app.emit_to("prompter", "passthrough-changed", next);
@@ -885,4 +899,57 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+// ── Tests ──────────────────────────────────────────────────
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn toggles_from_false_to_true_in_notch_mode() {
+        let passthrough = AtomicBool::new(false);
+        let (next, effective) = toggle_passthrough_state(&passthrough, false);
+        assert!(next);
+        assert!(effective);
+        assert!(passthrough.load(Ordering::Relaxed));
+    }
+
+    #[test]
+    fn toggles_from_true_to_false_in_notch_mode() {
+        let passthrough = AtomicBool::new(true);
+        let (next, effective) = toggle_passthrough_state(&passthrough, false);
+        assert!(!next);
+        assert!(!effective);
+        assert!(!passthrough.load(Ordering::Relaxed));
+    }
+
+    #[test]
+    fn classic_mode_forces_effective_false_even_when_next_is_true() {
+        let passthrough = AtomicBool::new(false);
+        let (next, effective) = toggle_passthrough_state(&passthrough, true);
+        // next still flips and is stored — only the applied/effective value is clamped.
+        assert!(next);
+        assert!(passthrough.load(Ordering::Relaxed));
+        assert!(!effective);
+    }
+
+    #[test]
+    fn classic_mode_forces_effective_false_when_next_is_false() {
+        let passthrough = AtomicBool::new(true);
+        let (next, effective) = toggle_passthrough_state(&passthrough, true);
+        assert!(!next);
+        assert!(!passthrough.load(Ordering::Relaxed));
+        assert!(!effective);
+    }
+
+    #[test]
+    fn repeated_toggles_alternate_and_state_stays_in_sync_with_return_value() {
+        let passthrough = AtomicBool::new(false);
+        for expected in [true, false, true, false] {
+            let (next, _effective) = toggle_passthrough_state(&passthrough, false);
+            assert_eq!(next, expected);
+            assert_eq!(passthrough.load(Ordering::Relaxed), expected);
+        }
+    }
 }

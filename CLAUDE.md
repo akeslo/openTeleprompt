@@ -12,7 +12,7 @@ npm run build:frontend   # Vite-only build → dist/
 npm run build:win        # Windows cross-compile (x86_64-pc-windows-msvc)
 ```
 
-No linter, type checker, or test suite — vanilla JavaScript throughout.
+No linter or type checker. Test suite: `npm test` (vitest) — covers tokenizer, fileUtils, SettingsView, and ReadView's seek-to-cue logic.
 
 ## Architecture
 
