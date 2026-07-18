@@ -14,6 +14,8 @@ npm run build:win        # Windows cross-compile (x86_64-pc-windows-msvc)
 
 No linter or type checker. Test suite: `npm test` (vitest) — covers tokenizer, fileUtils, SettingsView, and ReadView's seek-to-cue logic.
 
+No Rust toolchain (cargo/rustc) on this dev machine — `src-tauri/` changes can't be compiled or `cargo test`-verified here; review by hand and verify on a Rust-capable machine before relying on a src-tauri change.
+
 ## Architecture
 
 **Desktop teleprompter app** — React 19 frontend + Tauri 2 (Rust) backend. macOS-first; notch mode requires direct Objective-C API calls. No cloud, no database — all state is local files.
