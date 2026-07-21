@@ -30,7 +30,7 @@ Bold, color highlights, and smart cue markers: `[PAUSE]` `[SLOW]` `[BREATHE]`. F
 Save multiple scripts, switch instantly. Auto-saves on start. Local only — no cloud, no account.
 
 ### Light & dark theme
-Pastel light mode default. Toggle from settings or the menubar. Persists across sessions.
+Dark mode default, with a pastel light mode available. Toggle from settings or the menubar. Persists across sessions.
 
 ### Live controls while reading
 Adjust scroll speed and font size on the fly — no need to pause your delivery.
@@ -48,7 +48,7 @@ Clean React settings view with auto-height. All preferences in one place, persis
 - 📝 **Rich text editor** — bold, highlights, cue markers `[PAUSE]` `[SLOW]` `[BREATHE]`
 - 📚 **Script library** — save and switch multiple scripts, auto-saves
 - 🔇 **Invisible during screen share** — Zoom, Meet, Loom can't see it. Only you can
-- 🌗 **Light & dark theme** — pastel light default, toggleable
+- 🌗 **Light & dark theme** — dark default, pastel light mode available, toggleable
 - ⚡ **Live controls** — speed + font size adjustable while reading
 - 🌫️ **Opacity control** — barely-there to solid
 - ⌨️ **Global shortcuts** — ⌘⇧Space, ⌘⇧↑↓, ⌘⇧R
