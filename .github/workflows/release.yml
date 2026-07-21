@@ -53,8 +53,8 @@ jobs:
             **Redesigned settings panel**
             A clean React settings view with ResizeObserver-driven auto-height. All your preferences in one place, persisted across sessions.
 
-            **Visual test suite**
-            16 Playwright tests covering 48 state combos (notch/classic × idle/edit/read × dark/light). Confidence in every release.
+            **Unit test suite (vitest)**
+            Covers tokenizer, fileUtils, ReadView, and SettingsView components.
 
             ---
 
