@@ -44,8 +44,9 @@ npm run dev
 # Build for macOS
 npm run build
 
-# Build for Windows
-npm run build:win
+# Build for Windows (v3 only — intentionally disabled)
+# npm run build:win
+# Windows support for v3 is coming in a follow-up release. Windows users should use v2.2.1.
 ```
 
 ## Development Conventions

@@ -9,7 +9,7 @@ npm run dev              # Full Tauri app (Rust + React, hot reload) — primary
 npm run dev:vite         # Frontend only on port 1420 (no Rust compile — fast UI iteration)
 npm run build            # Full macOS production build → .dmg
 npm run build:frontend   # Vite-only build → dist/
-npm run build:win        # Windows cross-compile (x86_64-pc-windows-msvc)
+# npm run build:win      # Windows cross-compile (disabled for v3 — Windows support coming in a follow-up release)
 ```
 
 No linter or type checker. Test suite: `npm test` (vitest) — covers tokenizer, fileUtils, SettingsView, and ReadView's seek-to-cue logic.
