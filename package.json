@@ -1,7 +1,7 @@
 {
   "name": "open-teleprompter",
   "version": "3.0.0",
-  "description": "Voice-activated teleprompter for Mac and Windows",
+  "description": "Voice-activated teleprompter for macOS (Windows support planned for a follow-up release)",
   "private": true,
   "scripts": {
     "dev": "tauri dev",

@@ -80,7 +80,6 @@ Clean React settings view with auto-height. All preferences in one place, persis
 openTeleprompt/
 ├── src/                ← React UI (React 19, Vite, Zustand)
 ├── src-tauri/          ← Rust Backend (Tauri 2.0)
-├── website/            ← The marketing landing page
 ├── docs/               ← Project documentation (GEMINI.md, etc.)
 ├── index.html          ← Entry point: Prompter
 └── settings.html       ← Entry point: Settings
