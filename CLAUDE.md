@@ -12,7 +12,7 @@ npm run build:frontend   # Vite-only build → dist/
 # npm run build:win      # Windows cross-compile (disabled for v3 — Windows support coming in a follow-up release)
 ```
 
-No linter or type checker. Test suite: `npm test` (vitest) — covers tokenizer, fileUtils, SettingsView, and ReadView's seek-to-cue logic.
+No linter or type checker. Test suite: `npm test` (vitest) — covers tokenizer, fileUtils, mic, the Tauri API bridge, SettingsView, EditView, IdleView, and ReadView's seek-to-cue logic. No test file for `src/store/index.js` (the Zustand store) yet.
 
 No Rust toolchain (cargo/rustc) on this dev machine — `src-tauri/` changes can't be compiled or `cargo test`-verified here; review by hand and verify on a Rust-capable machine before relying on a src-tauri change.
 
