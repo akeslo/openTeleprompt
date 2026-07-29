@@ -35,6 +35,6 @@ npm run dev
 
 ## What we'll likely decline
 
-- Breaking the single-file renderer architecture
+- Breaking the single-store architecture (all shared state in `src/store/index.js`)
 - Adding heavy dependencies
 - Features that compromise privacy (no cloud, no tracking — ever)

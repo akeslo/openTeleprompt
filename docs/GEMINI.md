@@ -1,6 +1,6 @@
 # OpenTeleprompter: Gemini Context
 
-OpenTeleprompter is a free, open-source, voice-activated teleprompter built with **Tauri** (Rust) and **React** (TypeScript/JavaScript). It features a unique "Notch Mode" for macOS that mimics the Dynamic Island, as well as a "Classic Mode" for standard windowed use.
+OpenTeleprompter is a free, open-source, voice-activated teleprompter built with **Tauri** (Rust) and **React** (plain JavaScript/JSX — no TypeScript). It features a unique "Notch Mode" for macOS that mimics the Dynamic Island, as well as a "Classic Mode" for standard windowed use.
 
 ## Project Overview
 
@@ -23,7 +23,6 @@ OpenTeleprompter is a free, open-source, voice-activated teleprompter built with
     *   `lib/`: Helper libraries for API communication (`api.js`), microphone/VAD logic (`mic.js`), and text processing.
 *   `dist/`: Final production artifacts (.app, .dmg).
 
-## Building and Running
 ## Building and Running
 
 ### Prerequisites
