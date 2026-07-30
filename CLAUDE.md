@@ -37,7 +37,7 @@ Single monolithic Rust file containing all Tauri commands, window creation, tray
 
 - **Notch mode:** `elevate_to_notch_level()` uses `objc2` / `objc2-app-kit` to set `NSWindow` level 27 (above menu bar) and reposition flush to screen top. Must be called on the **main thread** — macOS Sequoia enforces this.
 - **Mode switch (`switch_mode`):** Spawns a background thread → emits stop → polls for window close → dispatches `create_prompter_window` to main thread via `run_on_main_thread`. Avoids sleeping on main thread.
-- **Tauri plugins:** `global-shortcut` (⌘⇧Space/↑/↓/R, also Ctrl variants), `fs`, `positioner` (TrayCenter positioning — only valid after first tray click, guarded by `TRAY_CLICKED` atomic).
+- **Tauri plugins:** `global-shortcut` (⌘⇧Space/↑/↓/R, also Ctrl variants; ⌥⌘T / Ctrl+Alt+T toggles click-through passthrough — handled in Rust so it works even when JS ignores mouse events), `fs`, `positioner` (TrayCenter positioning — only valid after first tray click, guarded by `TRAY_CLICKED` atomic).
 - **Config persistence:** `~/.teleprompter-config.json` (loaded/saved as `Config` struct). Scripts: `~/.teleprompter-scripts.json`.
 - **`set_config` command:** Accepts a partial JSON patch — only keys present in the payload are updated. The `config-update` Tauri event carries **snake_case** keys; the frontend normalizes these to camelCase before storing in Zustand.
 
