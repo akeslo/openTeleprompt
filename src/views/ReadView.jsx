@@ -191,11 +191,9 @@ export default function ReadView() {
       if (action === 'pause') togglePause()
       if (action === 'faster') setSpeedIdx(i => Math.min(SPEEDS.length - 1, i + 1))
       if (action === 'slower') setSpeedIdx(i => Math.max(0, i - 1))
-      if (action === 'reset') {
-        scrollPosRef.current = 0
-        if (scriptTextRef.current) scriptTextRef.current.style.transform = 'translateY(0px)'
-        firedMarkers.current.clear()
-      }
+      // Reuse handleReset so the keyboard shortcut and the ↺ button stay identical —
+      // the inline version used to skip the progress-bar reset and firedHeadings.clear().
+      if (action === 'reset') handleReset()
       if (action === 'stop') handleDone()
       if (action === 'passthrough') togglePassThrough()
     }).then(fn => { unlistenShortcut = fn })
