@@ -7,11 +7,14 @@ export const useAppStore = create((set) => ({
   config: {
     mode: 'notch',
     scrollSpeed: 1,
-    fontSize: 16,
+    // These must mirror `impl Default for Config` in src-tauri/src/lib.rs — they are
+    // what renders for the frame before API.getConfig() resolves, so a divergent value
+    // shows as a visible jump (fontSize was 16 here vs 24 in Rust, autoScroll false vs true).
+    fontSize: 24,
     textAlign: 'center',
     opacity: 1,
     threshold: 0.018,
-    autoScroll: false,
+    autoScroll: true,
     micDeviceId: 'default',
     theme: 'dark',
   },

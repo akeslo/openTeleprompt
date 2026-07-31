@@ -47,7 +47,7 @@ export default function App() {
         textAlign:    cfg.textAlign    ?? cfg.text_align    ?? 'center',
         opacity:      cfg.opacity      ?? 1,
         threshold:    cfg.threshold    ?? 0.018,
-        autoScroll:   cfg.autoScroll   ?? cfg.auto_scroll   ?? false,
+        autoScroll:   cfg.autoScroll   ?? cfg.auto_scroll   ?? true,
         micDeviceId:  cfg.micDeviceId  ?? cfg.mic_device_id ?? 'default',
       })
       API.setIgnoreMouse(false)
