@@ -80,12 +80,15 @@ pub struct Config {
     pub auto_scroll: bool,
     pub mic_device_id: String,
     pub theme: String,
-    #[serde(default)]
+    // Must be a named default, not `#[serde(default)]` — f64's Default is 0.0, so any
+    // config file written before fontSize existed deserializes to a 0px script.
+    #[serde(default = "default_font_size")]
     pub font_size: f64,
     #[serde(default = "default_text_align")]
     pub text_align: String,
 }
 
+fn default_font_size() -> f64 { 24.0 }
 fn default_text_align() -> String { "center".to_string() }
 
 impl Default for Config {
