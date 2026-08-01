@@ -182,9 +182,9 @@ export default function ReadView() {
 
     let unlistenShortcut, unlistenCueJump, unlistenPassthrough
 
-    window.__TAURI__?.event?.listen('passthrough-changed', (e) => {
-      isPassThroughRef.current = e.payload
-      setIsPassThrough(e.payload)
+    API.onPassthroughChanged((payload) => {
+      isPassThroughRef.current = payload
+      setIsPassThrough(payload)
     }).then(fn => { unlistenPassthrough = fn })
 
     API.onShortcut((action) => {
@@ -198,8 +198,8 @@ export default function ReadView() {
       if (action === 'passthrough') togglePassThrough()
     }).then(fn => { unlistenShortcut = fn })
 
-    window.__TAURI__?.event?.listen('cue-jump', (e) => {
-      seekToCue(e.payload.cueId)
+    API.onCueJump(({ cueId }) => {
+      seekToCue(cueId)
     }).then(fn => { unlistenCueJump = fn })
 
     return () => {

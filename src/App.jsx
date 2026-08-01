@@ -73,9 +73,8 @@ export default function App() {
       if (Object.keys(patch).length) setConfig(patch)
     }).then(fn => { unlistenConfig = fn })
 
-    window.__TAURI__?.event?.listen('cue-jump', (e) => {
+    API.onCueJump(({ cueId }) => {
       if (viewRef.current === 'read') return
-      const { cueId } = e.payload
       const state = useAppStore.getState()
       if (!state.scriptDoc) {
         const idx = state.currentScriptIndex

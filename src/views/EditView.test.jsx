@@ -57,6 +57,8 @@ vi.mock('../lib/api', () => ({
     saveScripts: vi.fn(),
     setConfig: vi.fn(),
     setIgnoreMouse: vi.fn(),
+    onPassthroughChanged: vi.fn(() => Promise.resolve(() => {})),
+    onCueJump: vi.fn(() => Promise.resolve(() => {})),
   },
 }))
 

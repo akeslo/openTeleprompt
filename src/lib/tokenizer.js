@@ -4,16 +4,30 @@
 const MARKER_RE = /^\[(PAUSE|SLOW|BREATHE)\]$/i
 
 // Returns array of { id, level, text } for every h1/h2 in the doc.
+// The walk must mirror tokenizeDoc's recursion exactly: ids assigned here are the same
+// ids ReadView keys headingRefs by, so a heading nested in a blockquote or list item
+// that one walker sees and the other misses shifts every later cue and makes
+// seekToCue land on the wrong section.
 export function extractCues(doc) {
   if (!doc?.content) return []
   const cues = []
   let id = 0
-  for (const node of doc.content) {
-    if (node.type === 'heading' && (node.attrs?.level === 1 || node.attrs?.level === 2)) {
-      const text = node.content?.map(c => c.text ?? '').join('') ?? ''
-      cues.push({ id: id++, level: node.attrs.level, text })
+
+  function walk(node) {
+    if (!node) return
+    if (node.type === 'text') return
+    if (node.type === 'heading') {
+      const level = node.attrs?.level ?? 1
+      if (level === 1 || level === 2) {
+        const text = node.content?.map(c => c.text ?? '').join('') ?? ''
+        cues.push({ id: id++, level, text })
+      }
+      return
     }
+    if (node.content) node.content.forEach(walk)
   }
+
+  doc.content.forEach(walk)
   return cues
 }
 

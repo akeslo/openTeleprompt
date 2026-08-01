@@ -30,6 +30,23 @@ describe('extractCues', () => {
     }
     expect(extractCues(doc)).toEqual([{ id: 0, level: 1, text: 'Hello World' }])
   })
+
+  it('finds nested headings so cue ids stay aligned with tokenizeDoc', () => {
+    const doc = {
+      content: [
+        { type: 'blockquote', content: [
+          { type: 'heading', attrs: { level: 1 }, content: [{ text: 'Quoted' }] },
+        ] },
+        { type: 'heading', attrs: { level: 1 }, content: [{ text: 'Top level' }] },
+      ],
+    }
+    expect(extractCues(doc)).toEqual([
+      { id: 0, level: 1, text: 'Quoted' },
+      { id: 1, level: 1, text: 'Top level' },
+    ])
+    const headingIds = tokenizeDoc(doc).filter(t => t.type === 'heading').map(t => t.id)
+    expect(headingIds).toEqual([0, 1])
+  })
 })
 
 describe('tokenizeDoc', () => {

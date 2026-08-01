@@ -12,6 +12,10 @@ export function createMicEngine({ onSpeaking, onSilence, onError, threshold }) {
   let silenceTimer = null
   let voiceFrameCount = 0
   let isSpeaking = false
+  // getUserMedia is async, so stop() can land while start() is still awaiting it. Without
+  // this flag the resolved-late start() installs an AudioContext, a live mic track and a
+  // 16ms interval that nothing holds a reference to any more — the mic stays lit forever.
+  let stopped = false
   let VOLUME_THRESHOLD = threshold ?? 0.018
 
   function isVoiceFrequency(analyser, freqData, binHz) {
@@ -38,6 +42,7 @@ export function createMicEngine({ onSpeaking, onSilence, onError, threshold }) {
   }
 
   async function start(micDeviceId) {
+    stopped = false
     const audioConstraints = {
       echoCancellation: false,
       noiseSuppression: false,
@@ -57,6 +62,12 @@ export function createMicEngine({ onSpeaking, onSilence, onError, threshold }) {
       }
     } catch (e) {
       onError?.(e)
+      return false
+    }
+
+    if (stopped) {
+      micStream.getTracks().forEach(t => t.stop())
+      micStream = null
       return false
     }
 
@@ -95,6 +106,7 @@ export function createMicEngine({ onSpeaking, onSilence, onError, threshold }) {
   }
 
   function stop() {
+    stopped = true
     if (analyserInterval) { clearInterval(analyserInterval); analyserInterval = null }
     if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null }
     if (audioCtx) { audioCtx.close(); audioCtx = null }

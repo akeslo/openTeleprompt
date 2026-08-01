@@ -44,8 +44,8 @@ export default function EditView() {
 
   useEffect(() => {
     let unlisten
-    window.__TAURI__?.event?.listen('passthrough-changed', (e) => {
-      setIsPassThrough(e.payload)
+    API.onPassthroughChanged((payload) => {
+      setIsPassThrough(payload)
     }).then(fn => { unlisten = fn })
     return () => unlisten?.()
   }, [])
@@ -215,7 +215,11 @@ export default function EditView() {
     const updated = scripts.filter((_, idx) => idx !== i)
     setScripts(updated)
     API.saveScripts(updated)
-    if (currentScriptIndex >= i) setCurrentScriptIndex(Math.max(-1, currentScriptIndex - 1))
+    // Deleting the script currently loaded in the editor must clear the selection, not
+    // slide it onto the neighbour — the editor still holds the deleted content, so the
+    // next Save would overwrite that unrelated script (and its backing file on disk).
+    if (currentScriptIndex === i) setCurrentScriptIndex(-1)
+    else if (currentScriptIndex > i) setCurrentScriptIndex(currentScriptIndex - 1)
   }
 
   function insertMarker(marker) {
