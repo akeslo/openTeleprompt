@@ -180,14 +180,15 @@ export default function ReadView() {
     micEngineRef.current = engine
     engine.start(configRef.current.micDeviceId)
 
-    let unlistenShortcut, unlistenCueJump, unlistenPassthrough
-
-    API.onPassthroughChanged((payload) => {
+    // Hold the promises, not their results: a fast unmount (every Go/Stop cycle
+    // remounts this view) runs cleanup before registration resolves, which would
+    // leave orphaned listeners still firing a dead component's handlers.
+    const pPassthrough = API.onPassthroughChanged((payload) => {
       isPassThroughRef.current = payload
       setIsPassThrough(payload)
-    }).then(fn => { unlistenPassthrough = fn })
+    })
 
-    API.onShortcut((action) => {
+    const pShortcut = API.onShortcut((action) => {
       if (action === 'pause') togglePause()
       if (action === 'faster') setSpeedIdx(i => Math.min(SPEEDS.length - 1, i + 1))
       if (action === 'slower') setSpeedIdx(i => Math.max(0, i - 1))
@@ -196,18 +197,18 @@ export default function ReadView() {
       if (action === 'reset') handleReset()
       if (action === 'stop') handleDone()
       if (action === 'passthrough') togglePassThrough()
-    }).then(fn => { unlistenShortcut = fn })
+    })
 
-    API.onCueJump(({ cueId }) => {
+    const pCueJump = API.onCueJump(({ cueId }) => {
       seekToCue(cueId)
-    }).then(fn => { unlistenCueJump = fn })
+    })
 
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
       micEngineRef.current?.stop()
-      unlistenShortcut?.()
-      unlistenCueJump?.()
-      unlistenPassthrough?.()
+      pShortcut.then(fn => fn?.())
+      pCueJump.then(fn => fn?.())
+      pPassthrough.then(fn => fn?.())
       emitScrollProgress(false)
     }
   }, [])

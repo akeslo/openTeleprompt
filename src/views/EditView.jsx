@@ -7,7 +7,7 @@ import Link from '@tiptap/extension-link'
 import { useAppStore } from '../store'
 import { API } from '../lib/api'
 import { extractCues } from '../lib/tokenizer'
-import { mdToHtml, tiptapToMarkdown, tiptapToPlainText } from '../lib/fileUtils'
+import { escapeHtml, mdToHtml, tiptapToMarkdown, tiptapToPlainText } from '../lib/fileUtils'
 
 const COLORS = [
   { label: 'White',  value: '#ffffff' },
@@ -43,11 +43,12 @@ export default function EditView() {
   const [isPassThrough, setIsPassThrough] = useState(false)
 
   useEffect(() => {
-    let unlisten
-    API.onPassthroughChanged((payload) => {
+    // Hold the promise, not its result: a fast unmount runs cleanup before the
+    // listener registration resolves, which would leak the listener forever.
+    const p = API.onPassthroughChanged((payload) => {
       setIsPassThrough(payload)
-    }).then(fn => { unlisten = fn })
-    return () => unlisten?.()
+    })
+    return () => { p.then(fn => fn?.()) }
   }, [])
 
   function togglePassThrough() {
@@ -86,7 +87,7 @@ export default function EditView() {
     try {
       editor.commands.setContent(JSON.parse(script.content))
     } catch {
-      editor.commands.setContent(`<p>${script.text || ''}</p>`)
+      editor.commands.setContent(`<p>${escapeHtml(script.text)}</p>`)
     }
     setStats(computeStats(script.text || ''))
     emitActiveScript(editor.getJSON())
@@ -108,7 +109,12 @@ export default function EditView() {
         const fileContent = existing.fileExt === 'md'
           ? tiptapToMarkdown(doc)
           : tiptapToPlainText(doc)
-        API.saveFile(existing.filePath, fileContent)
+        // A read-only file or a removed volume makes save_file return Err — flashing
+        // "Saved ✓" regardless told the user the file on disk was updated when it wasn't.
+        API.saveFile(existing.filePath, fileContent).catch(() => {
+          setOpenError('Failed to save file to disk')
+          setTimeout(() => setOpenError(null), 2500)
+        })
       }
     } else {
       updated.unshift({ name, text, content, filePath: '', fileExt: '' })
@@ -130,7 +136,7 @@ export default function EditView() {
       const fileName = path.split('/').pop().split('\\').pop().replace(/\.[^.]+$/, '')
       const html = ext === 'md'
         ? mdToHtml(content)
-        : content.split('\n').map(line => `<p>${line || '<br>'}</p>`).join('')
+        : content.split('\n').map(line => `<p>${line ? escapeHtml(line) : '<br>'}</p>`).join('')
       editor.commands.setContent(html)
       const tiptapDoc = editor.getJSON()
       const plainText = editor.getText().trim()
@@ -203,7 +209,7 @@ export default function EditView() {
     try {
       editor.commands.setContent(JSON.parse(script.content))
     } catch {
-      editor.commands.setContent(`<p>${script.text || ''}</p>`)
+      editor.commands.setContent(`<p>${escapeHtml(script.text)}</p>`)
     }
     setStats(computeStats(script.text || ''))
     editor.commands.focus()

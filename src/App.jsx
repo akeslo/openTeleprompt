@@ -57,9 +57,9 @@ export default function App() {
     API.getScripts().then((s) => { if (s) setScripts(s) })
 
     // Live config updates from settings window
-    let unlistenConfig, unlistenCueJump
-
-    API.onConfigUpdate((cfg) => {
+    // Hold the promises, not their results — cleanup can run before the listener
+    // registration resolves, leaving an orphaned listener behind.
+    const pConfig = API.onConfigUpdate((cfg) => {
       if (!cfg) return
       const SNAKE = {
         scroll_speed: 'scrollSpeed', auto_scroll: 'autoScroll', mic_device_id: 'micDeviceId',
@@ -71,9 +71,9 @@ export default function App() {
         patch[SNAKE[k] ?? k] = v
       }
       if (Object.keys(patch).length) setConfig(patch)
-    }).then(fn => { unlistenConfig = fn })
+    })
 
-    API.onCueJump(({ cueId }) => {
+    const pCueJump = API.onCueJump(({ cueId }) => {
       if (viewRef.current === 'read') return
       const state = useAppStore.getState()
       if (!state.scriptDoc) {
@@ -86,14 +86,14 @@ export default function App() {
       }
       setStartCueId(cueId)
       setView('read')
-    }).then(fn => { unlistenCueJump = fn })
+    })
 
     // Probe mic permission once so browser doesn't ask mid-session
     navigator.mediaDevices?.getUserMedia({ audio: true })
       .then(s => s.getTracks().forEach(t => t.stop()))
       .catch(() => {})
 
-    return () => { unlistenConfig?.(); unlistenCueJump?.() }
+    return () => { pConfig.then(fn => fn?.()); pCueJump.then(fn => fn?.()) }
   }, [])
 
   // ── Side-effects from config ───────────────────────────────

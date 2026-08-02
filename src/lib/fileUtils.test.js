@@ -1,5 +1,21 @@
 import { describe, it, expect } from 'vitest'
-import { mdToHtml, tiptapToMarkdown, tiptapToPlainText } from './fileUtils'
+import { escapeHtml, mdToHtml, tiptapToMarkdown, tiptapToPlainText } from './fileUtils'
+
+describe('escapeHtml', () => {
+  it('escapes angle brackets so plain-text lines survive setContent', () => {
+    expect(escapeHtml('if x < y then')).toBe('if x &lt; y then')
+    expect(escapeHtml('use <name> here')).toBe('use &lt;name&gt; here')
+  })
+
+  it('escapes ampersands before angle brackets so entities are not double-decoded', () => {
+    expect(escapeHtml('a & b < c')).toBe('a &amp; b &lt; c')
+  })
+
+  it('returns an empty string for null and undefined', () => {
+    expect(escapeHtml(null)).toBe('')
+    expect(escapeHtml(undefined)).toBe('')
+  })
+})
 
 describe('mdToHtml', () => {
   it('converts markdown headings and bold text to HTML', () => {

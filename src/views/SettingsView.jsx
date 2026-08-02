@@ -70,22 +70,21 @@ export default function SettingsView() {
       .then(devs => setMicDevices(devs.filter(d => d.kind === 'audioinput')))
       .catch(() => {})
 
-    let unlistenConfig, unlistenActiveScript, unlistenScrollProgress, unlistenPassthrough
+    // Hold the promises, not their results — cleanup can run before the listener
+    // registration resolves, leaving an orphaned listener behind.
+    const pPassthrough = tauriListen('passthrough-changed', (e) => setIsPassThrough(e.payload))
 
-    tauriListen('passthrough-changed', (e) => setIsPassThrough(e.payload))
-      .then(fn => { unlistenPassthrough = fn })
+    const pConfig = API.onConfigUpdate(applyConfig)
 
-    API.onConfigUpdate(applyConfig).then(fn => { unlistenConfig = fn })
-
-    API.onActiveScript(({ cues }) => {
+    const pActiveScript = API.onActiveScript(({ cues }) => {
       setActiveCues(cues ?? [])
-    }).then(fn => { unlistenActiveScript = fn })
+    })
 
-    API.onScrollProgress(({ pct, isRunning, isPaused }) => {
+    const pScrollProgress = API.onScrollProgress(({ pct, isRunning, isPaused }) => {
       setScrollPct(pct ?? 0)
       setIsRunning(isRunning ?? false)
       setIsPaused(isPaused ?? false)
-    }).then(fn => { unlistenScrollProgress = fn })
+    })
 
     const handler = (e) => {
       if (e.metaKey && e.altKey && e.code === 'KeyI') API.openDevTools()
@@ -93,10 +92,10 @@ export default function SettingsView() {
     document.addEventListener('keydown', handler)
 
     return () => {
-      unlistenConfig?.()
-      unlistenActiveScript?.()
-      unlistenScrollProgress?.()
-      unlistenPassthrough?.()
+      pConfig.then(fn => fn?.())
+      pActiveScript.then(fn => fn?.())
+      pScrollProgress.then(fn => fn?.())
+      pPassthrough.then(fn => fn?.())
       document.removeEventListener('keydown', handler)
     }
   }, [])

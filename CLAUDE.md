@@ -55,7 +55,7 @@ Both `create_prompter_window` (mode-switch path) and `setup` (startup path) must
 ### Key invariants
 
 - **`tauriInvoke` alias** — `src/lib/api.js` defines `const tauriInvoke = window.__TAURI__?.core?.invoke ?? ...`. Always use `tauriInvoke`, never bare `invoke` (not a global).
-- **Tauri event listeners must be cleaned up.** `tauriListen` (and `API.onConfigUpdate`, `API.onShortcut`) returns `Promise<UnlistenFn>`. Always capture and call in `useEffect` cleanup: `.then(fn => { unlisten = fn })` / `return () => unlisten?.()`.
+- **Tauri event listeners must be cleaned up — hold the promise, not its result.** `tauriListen` (and `API.onConfigUpdate`, `API.onShortcut`) returns `Promise<UnlistenFn>`. Assigning the resolved fn to a local (`.then(fn => { unlisten = fn })` / `return () => unlisten?.()`) leaks the listener whenever cleanup runs before registration resolves — which `ReadView` hits on every Go/Stop cycle. Correct pattern: `const p = API.onX(cb)` / `return () => { p.then(fn => fn?.()) }`.
 - **Mic device tracking in `ReadView`:** The running engine's device is tracked in `prevMicDeviceIdRef` (a separate ref), not `configRef`. `configRef` is synced by an earlier effect in the same commit, so comparing `configRef.current.micDeviceId !== config.micDeviceId` is always false.
 - **`TRAY_CLICKED` guard:** `resize_settings` and `position_settings_window` only call `move_window(Position::TrayCenter)` if `TRAY_CLICKED` is true — calling positioner before the first tray click panics.
 - **Classic mode click-through:** `set_ignore_mouse` always passes `false` in classic mode — buttons must remain clickable.

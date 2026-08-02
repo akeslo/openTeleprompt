@@ -69,8 +69,12 @@ use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut,
 use tauri_plugin_positioner::{Position, WindowExt};
 
 // ── Config ─────────────────────────────────────────────────
+// `default` at the container level fills *any* missing field from `Config::default()`,
+// so a config file written by an older build (before `theme`/`micDeviceId`/`fontSize`
+// existed) merges over the defaults instead of failing to parse whole — which used to
+// silently reset every setting on upgrade.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase")]
 pub struct Config {
     pub scroll_speed: f64,
     pub threshold: f64,
@@ -362,7 +366,16 @@ fn set_ignore_mouse(app: AppHandle, state: State<AppState>, ignore: bool) -> Res
     let cfg = state.config.lock().unwrap();
     let is_classic = cfg.mode == "classic";
     drop(cfg);
-    if !ignore { state.passthrough.store(false, Ordering::Relaxed); }
+    if !ignore {
+        // Clearing passthrough must be broadcast the same way `toggle_passthrough` does,
+        // or the ⊙ buttons in EditView and the settings window keep rendering as active
+        // after handleDone/handleCollapse turned click-through off.
+        let was = state.passthrough.swap(false, Ordering::Relaxed);
+        if was {
+            let _ = app.emit_to("prompter", "passthrough-changed", false);
+            let _ = app.emit_to("settings", "passthrough-changed", false);
+        }
+    }
     if let Some(w) = get_prompter(&app) {
         let effective = if is_classic { false } else { ignore };
         w.set_ignore_cursor_events(effective).map_err(|e| e.to_string())?;

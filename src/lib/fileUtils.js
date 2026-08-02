@@ -1,5 +1,15 @@
 import { marked } from 'marked'
 
+// Escape a plain-text line before interpolating it into an HTML string for Tiptap.
+// Without this, a .txt line like `if x < y then` is parsed as markup and the
+// angle-bracket content is silently dropped by the ProseMirror schema.
+export function escapeHtml(text) {
+  return String(text ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
 // MD file → HTML string for Tiptap setContent
 export function mdToHtml(mdText) {
   return marked.parse(mdText, { async: false })
