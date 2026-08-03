@@ -74,7 +74,14 @@ export default function EditView() {
       setStats(computeStats(editor.getText()))
       clearTimeout(emitDebounceRef.current)
       emitDebounceRef.current = setTimeout(() => {
-        emitActiveScript(editor.getJSON())
+        const doc = editor.getJSON()
+        emitActiveScript(doc)
+        // Keep the store's copy live as well. A cue-jump fired from the settings
+        // window switches straight to Read view without going through handleStart,
+        // so without this it would render the last *saved* revision (or, worse, a
+        // leftover doc from a previously opened script) instead of what is on screen.
+        setScriptText(editor.getText())
+        setScriptDoc(doc)
       }, 300)
     },
   })

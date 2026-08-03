@@ -70,7 +70,12 @@ export default function App() {
     const pCueJump = API.onCueJump(({ cueId }) => {
       if (viewRef.current === 'read') return
       const state = useAppStore.getState()
-      if (!state.scriptDoc) {
+      // From Edit view the store already holds the live editor content (EditView
+      // syncs it on every debounced update), so reloading from disk here would
+      // throw away whatever is currently on screen. Everywhere else `scriptDoc`
+      // may be a leftover from a previously opened script, so refresh it rather
+      // than trusting it just because it is non-null.
+      if (viewRef.current !== 'edit') {
         const idx = state.currentScriptIndex
         const script = idx >= 0 ? state.scripts[idx] : state.scripts[0]
         if (!script) { setView('edit'); return }

@@ -88,7 +88,16 @@ export function createMicEngine({ onSpeaking, onSilence, onError, threshold }) {
       for (let i = 0; i < timeData.length; i++) sum += timeData[i] * timeData[i]
       const rms = Math.sqrt(sum / timeData.length)
 
-      const isSpeech = rms > VOLUME_THRESHOLD && isVoiceFrequency(analyser, freqData, binHz)
+      // The hysteresis counter must decay on quiet frames too. Short-circuiting the
+      // frequency check on low RMS leaves voiceFrameCount pinned at VOICE_FRAMES_REQUIRED
+      // through every pause, so the first loud non-voice sound after real speech (a cough,
+      // a chair creak, a mic bump) reads as speech on frame one instead of having to ramp.
+      let isSpeech = false
+      if (rms > VOLUME_THRESHOLD) {
+        isSpeech = isVoiceFrequency(analyser, freqData, binHz)
+      } else {
+        voiceFrameCount = Math.max(voiceFrameCount - 2, 0)
+      }
 
       if (isSpeech) {
         if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null }
