@@ -39,7 +39,7 @@ Single monolithic Rust file containing all Tauri commands, window creation, tray
 - **Mode switch (`switch_mode`):** Spawns a background thread → emits stop → polls for window close → dispatches `create_prompter_window` to main thread via `run_on_main_thread`. Avoids sleeping on main thread.
 - **Tauri plugins:** `global-shortcut` (⌘⇧Space/↑/↓/R, also Ctrl variants; ⌥⌘T / Ctrl+Alt+T toggles click-through passthrough — handled in Rust so it works even when JS ignores mouse events), `fs`, `positioner` (TrayCenter positioning — only valid after first tray click, guarded by `TRAY_CLICKED` atomic).
 - **Config persistence:** `~/.teleprompter-config.json` (loaded/saved as `Config` struct). Scripts: `~/.teleprompter-scripts.json`.
-- **`set_config` command:** Accepts a partial JSON patch — only keys present in the payload are updated. The `config-update` Tauri event carries **snake_case** keys; the frontend normalizes these to camelCase before storing in Zustand.
+- **`set_config` command:** Accepts a partial JSON patch — only keys present in the payload are updated. `Config` is `#[serde(rename_all = "camelCase")]`, so the `config-update` Tauri event carries **camelCase** keys — the frontend stores them as-is. (`App.jsx`'s `getConfig()` bootstrap keeps `?? cfg.snake_case` fallbacks only for config files written by pre-camelCase builds.)
 
 ### Production build paths
 

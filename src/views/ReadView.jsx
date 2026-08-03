@@ -6,6 +6,11 @@ import { createMicEngine, SPEEDS, SCROLL_SPEED_BASE } from '../lib/mic'
 
 export default function ReadView() {
   const { scriptText, scriptDoc, config, setConfig, setView, startCueId, setStartCueId } = useAppStore()
+  // IdleView renders its dot from the store's isSpeaking/isPaused, but playback state lives
+  // in this component's local state. Mirror every transition into the store or the dot is
+  // permanently stuck on "Teleprompter"/grey.
+  const setStoreSpeaking = (v) => useAppStore.getState().setIsSpeaking(v)
+  const setStorePaused   = (v) => useAppStore.getState().setIsPaused(v)
   // tokenizeDoc walks the entire doc tree — memoize so it only runs when scriptDoc changes,
   // not on every isSpeaking/speedIdx/micStatus state update.
   const tokens = useMemo(() => scriptDoc ? tokenizeDoc(scriptDoc) : [], [scriptDoc])
@@ -38,6 +43,10 @@ export default function ReadView() {
   const firedMarkers       = useRef(new Set())
   const firedHeadings      = useRef(new Set())
   const sectionTimerRef    = useRef(null)
+  // Pending [PAUSE]/[BREATHE] resume timers — must be cancelled on unmount, or a Stop
+  // within 1.2s/2.5s of a marker fires setState into a dead component and can clear a
+  // pause the user set manually right after the marker.
+  const markerTimersRef    = useRef(new Set())
   const micEngineRef       = useRef(null)
   const prevMicDeviceIdRef = useRef(config.micDeviceId)
   const frameCountRef      = useRef(0)
@@ -84,8 +93,8 @@ export default function ReadView() {
       micEngineRef.current?.stop()
       const engine = createMicEngine({
         threshold: config.threshold,
-        onSpeaking: () => { isSpeakingRef.current = true;  setIsSpeaking(true);  setMicStatus('Speaking') },
-        onSilence:  () => { isSpeakingRef.current = false; setIsSpeaking(false); setMicStatus('Waiting…') },
+        onSpeaking: () => { isSpeakingRef.current = true;  setIsSpeaking(true);  setStoreSpeaking(true);  setMicStatus('Speaking') },
+        onSilence:  () => { isSpeakingRef.current = false; setIsSpeaking(false); setStoreSpeaking(false); setMicStatus('Waiting…') },
         onError:    () => setMicStatus('Mic error'),
       })
       micEngineRef.current = engine
@@ -113,12 +122,15 @@ export default function ReadView() {
         if (el.offsetTop - scrollPosRef.current < readingZone) {
           firedMarkers.current.add(idx)
           const marker = el.dataset.marker
-          if (marker === 'PAUSE') {
-            isPausedRef.current = true; setIsPaused(true); setMicStatus('Paused')
-            setTimeout(() => { isPausedRef.current = false; setIsPaused(false); setMicStatus('Waiting…') }, 1200)
-          } else if (marker === 'BREATHE') {
-            isPausedRef.current = true; setIsPaused(true); setMicStatus('Breathe…')
-            setTimeout(() => { isPausedRef.current = false; setIsPaused(false); setMicStatus('Waiting…') }, 2500)
+          if (marker === 'PAUSE' || marker === 'BREATHE') {
+            isPausedRef.current = true; setIsPaused(true); setStorePaused(true)
+            setMicStatus(marker === 'PAUSE' ? 'Paused' : 'Breathe…')
+            const id = setTimeout(() => {
+              markerTimersRef.current.delete(id)
+              isPausedRef.current = false; setIsPaused(false); setStorePaused(false)
+              setMicStatus('Waiting…')
+            }, marker === 'PAUSE' ? 1200 : 2500)
+            markerTimersRef.current.add(id)
           } else if (marker === 'SLOW') {
             setSpeedIdx(prev => {
               const n = Math.max(0, prev - 1)
@@ -173,8 +185,8 @@ export default function ReadView() {
 
     const engine = createMicEngine({
       threshold: configRef.current.threshold,
-      onSpeaking: () => { isSpeakingRef.current = true;  setIsSpeaking(true);  setMicStatus('Speaking') },
-      onSilence:  () => { isSpeakingRef.current = false; setIsSpeaking(false); setMicStatus('Waiting…') },
+      onSpeaking: () => { isSpeakingRef.current = true;  setIsSpeaking(true);  setStoreSpeaking(true);  setMicStatus('Speaking') },
+      onSilence:  () => { isSpeakingRef.current = false; setIsSpeaking(false); setStoreSpeaking(false); setMicStatus('Waiting…') },
       onError:    () => setMicStatus('Mic error'),
     })
     micEngineRef.current = engine
@@ -205,6 +217,9 @@ export default function ReadView() {
 
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      clearTimeout(sectionTimerRef.current)
+      markerTimersRef.current.forEach(clearTimeout)
+      markerTimersRef.current.clear()
       micEngineRef.current?.stop()
       pShortcut.then(fn => fn?.())
       pCueJump.then(fn => fn?.())
@@ -214,15 +229,27 @@ export default function ReadView() {
   }, [])
 
   function togglePause() {
+    // A manual pause wins over any in-flight marker resume — otherwise a [PAUSE] fired
+    // moments earlier un-pauses the user 1.2s later.
+    markerTimersRef.current.forEach(clearTimeout)
+    markerTimersRef.current.clear()
     const next = !isPausedRef.current
     isPausedRef.current = next
     setIsPaused(next)
+    setStorePaused(next)
     setMicStatus(next ? 'Paused' : 'Waiting…')
-    if (next) { isSpeakingRef.current = false; setIsSpeaking(false) }
+    if (next) { isSpeakingRef.current = false; setIsSpeaking(false); setStoreSpeaking(false) }
   }
 
   function handleDone() {
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    clearTimeout(sectionTimerRef.current)
+    markerTimersRef.current.forEach(clearTimeout)
+    markerTimersRef.current.clear()
+    isPausedRef.current = false
+    isSpeakingRef.current = false
+    setStorePaused(false)
+    setStoreSpeaking(false)
     micEngineRef.current?.stop()
     API.setIgnoreMouse(false)
     setView('idle')
@@ -357,7 +384,11 @@ const RESIZE_DIRS = [
 
 function ResizeHandles() {
   function startResize(dir) {
-    window.__TAURI__?.webviewWindow?.getCurrentWebviewWindow()?.startResizeDrag(dir)
+    // Tauri 2's method is `startResizeDragging` — `startResizeDrag` does not exist,
+    // so every handle was a silent no-op. The matching ACL permission
+    // (`core:window:allow-start-resize-dragging`) must stay in capabilities/default.json;
+    // `core:default` does not grant it.
+    window.__TAURI__?.webviewWindow?.getCurrentWebviewWindow()?.startResizeDragging(dir)
   }
   return RESIZE_DIRS.map(({ dir, style }) => (
     <div

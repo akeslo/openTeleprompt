@@ -30,10 +30,6 @@ export default function App() {
   const viewRef = useRef(view)
   useEffect(() => { viewRef.current = view }, [view])
 
-  useEffect(() => {
-    document.documentElement.style.opacity = config.opacity ?? 1
-  }, [config.opacity])
-
   // ── Bootstrap ──────────────────────────────────────────────
   useEffect(() => {
     // Load config
@@ -61,14 +57,12 @@ export default function App() {
     // registration resolves, leaving an orphaned listener behind.
     const pConfig = API.onConfigUpdate((cfg) => {
       if (!cfg) return
-      const SNAKE = {
-        scroll_speed: 'scrollSpeed', auto_scroll: 'autoScroll', mic_device_id: 'micDeviceId',
-        font_size: 'fontSize', text_align: 'textAlign',
-      }
+      // `Config` is `#[serde(rename_all = "camelCase")]`, so config-update carries
+      // camelCase keys only — no snake_case remap is needed here.
       const patch = {}
       for (const [k, v] of Object.entries(cfg)) {
         if (v === undefined) continue
-        patch[SNAKE[k] ?? k] = v
+        patch[k] = v
       }
       if (Object.keys(patch).length) setConfig(patch)
     })
