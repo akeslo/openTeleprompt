@@ -76,8 +76,27 @@ export default function ReadView() {
     scriptTextRef.current.style.transform = `translateY(${-scrollPosRef.current}px)`
     if (progressBarRef.current && maxScroll > 0)
       progressBarRef.current.style.width = `${(scrollPosRef.current / maxScroll) * 100}%`
+    primeFiredSets()
+  }
+
+  // After a jump, every marker and heading now sitting above the reading zone has
+  // been skipped past, not approached. Clearing the fired sets outright made the
+  // next animation frame fire all of them at once: a [PAUSE] anywhere earlier in
+  // the script froze the prompter the instant the reader jumped to a later cue,
+  // and the section label flashed a heading from the part they skipped.
+  function primeFiredSets() {
     firedMarkers.current.clear()
     firedHeadings.current.clear()
+    if (!scrollVPRef.current) return
+    const readingZone = scrollVPRef.current.clientHeight * 0.4
+    Object.entries(markerRefs.current).forEach(([idxStr, el]) => {
+      if (el && el.offsetTop - scrollPosRef.current < readingZone)
+        firedMarkers.current.add(Number(idxStr))
+    })
+    Object.entries(headingRefs.current).forEach(([idStr, el]) => {
+      if (el && el.offsetTop - scrollPosRef.current < readingZone)
+        firedHeadings.current.add(Number(idStr))
+    })
   }
 
   useEffect(() => {
@@ -281,6 +300,10 @@ export default function ReadView() {
     scriptTextRef.current.style.transform = `translateY(${-scrollPosRef.current}px)`
     if (progressBarRef.current && maxScroll > 0)
       progressBarRef.current.style.width = `${(scrollPosRef.current / maxScroll) * 100}%`
+    // Re-arm on manual scroll for the same reason seekToCue does: wheeling back to
+    // re-read a section used to leave its [PAUSE]/[SLOW] markers and its heading
+    // permanently spent, so the second pass through ran with none of them.
+    primeFiredSets()
   }
 
   const micRingClass = `mic-ring${isSpeaking ? '' : micStatus === 'Mic error' ? ' error' : ' paused'}`
