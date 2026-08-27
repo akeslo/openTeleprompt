@@ -20,7 +20,7 @@ No linter or type checker. Test suite: `npm test` (vitest) — covers tokenizer,
 
 ### Frontend (`/src/`)
 - **Views:** `IdleView` → `EditView` → `ReadView` (main flow), `SettingsView` in separate window
-- **State:** Single Zustand store at `src/store/index.js` — all app state lives here (no test file yet)
+- **State:** Single Zustand store at `src/store/index.js` — all app state lives here (unit-tested as of `1c36259`)
 - **Key lib:** `src/lib/api.js` (Tauri command bridge), `src/lib/mic.js` (Web Audio API voice detection, 85–3400 Hz), `src/lib/tokenizer.js` for scroll-word-sync
 - **Editor:** Tiptap 3 (StarterKit + TextStyle + Color). Script content stored as Tiptap JSON string in `.teleprompter-scripts.json`
 - **Styling:** Vanilla CSS only (`src/style.css`, `src/settings.css`) — no CSS framework. Design system: "Kinetic Resonance" — dark substrate, bioluminescent accents, strict central axis, pill geometry
