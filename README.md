@@ -10,8 +10,8 @@ A free, open source voice-activated teleprompter for **macOS**.
 
 | Platform | Notes |
 |---|---|
-| 🍎 Apple Silicon (M1–M4) | macOS 13+ |
-| 🍎 Intel Mac | macOS 13+ |
+| 🍎 Apple Silicon (M1–M4) | macOS 11+ |
+| 🍎 Intel Mac | macOS 11+ |
 
 ---
 
