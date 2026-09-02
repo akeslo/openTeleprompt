@@ -38,8 +38,8 @@ jobs:
 
             | Platform | Notes |
             |---|---|
-            | 🍎 Apple Silicon (M1–M4) | macOS 13+ — `*_aarch64.dmg` below |
-            | 🍎 Intel Mac | macOS 13+ — `*_x64.dmg` below |
+            | 🍎 Apple Silicon (M1–M4) | macOS 11+ — `*_aarch64.dmg` below |
+            | 🍎 Intel Mac | macOS 11+ — `*_x64.dmg` below |
 
             ---
 
