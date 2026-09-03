@@ -9,7 +9,6 @@
     "dev:react": "vite",
     "build": "tauri build",
     "build:frontend": "vite build",
-    "build:win": "tauri build --target x86_64-pc-windows-msvc",
     "test": "vitest run"
   },
   "devDependencies": {
