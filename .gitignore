@@ -30,3 +30,4 @@ src-tauri/target/
 vite.config.ts
 tsconfig.json
 tsconfig.node.json
+CLAUDE.local.md
