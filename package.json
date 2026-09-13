@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "tauri dev",
     "dev:vite": "vite",
-    "dev:react": "vite",
     "build": "tauri build",
     "build:frontend": "vite build",
     "test": "vitest run"
