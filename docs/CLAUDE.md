@@ -9,30 +9,41 @@ npm run dev              # Full Tauri app (Rust + React, hot reload) — primary
 npm run dev:vite         # Frontend only on port 1420 (no Rust compile — fast UI iteration)
 npm run build            # Full macOS production build → .dmg
 npm run build:frontend   # Vite-only build → dist/
-npm run test             # Vitest unit tests
+# npm run build:win      # Windows cross-compile (disabled for v3 — Windows support coming in a follow-up release)
 ```
 
-No linter or type checker. Test suite: `npm test` (vitest) — covers tokenizer, fileUtils, mic, the Tauri API bridge, SettingsView, EditView, IdleView, and ReadView's seek-to-cue logic.
+No linter or type checker. Test suite: `npm test` (vitest) — covers tokenizer, fileUtils, mic, the Tauri API bridge, SettingsView, EditView, IdleView, ReadView's seek-to-cue logic, and (as of `1c36259`) the Zustand store at `src/store/index.js`.
+
+No Rust toolchain (cargo/rustc) on this dev machine — `src-tauri/` changes can't be compiled or `cargo test`-verified here; review by hand and verify on a Rust-capable machine before relying on a src-tauri change.
 
 ## Architecture
 
-**Desktop teleprompter app** — React 19 frontend + Tauri 2 (Rust) backend. macOS-first with notch support via direct Objective-C APIs. No cloud, no database — everything local.
+**Desktop teleprompter app** — React 19 frontend + Tauri 2 (Rust) backend. macOS-first; notch mode requires direct Objective-C API calls. No cloud, no database — all state is local files.
 
 ### Frontend (`/src/`)
-- **Views:** `IdleView` → `EditView` → `ReadView` (main flow), `SettingsView` in separate window
-- **State:** Single Zustand store at `src/store/index.js` — all app state lives here (unit-tested as of `1c36259`)
-- **Key lib:** `src/lib/api.js` (Tauri command bridge), `src/lib/mic.js` (Web Audio API voice detection, 85–3400 Hz), `src/lib/tokenizer.js` for scroll-word-sync
-- **Editor:** Tiptap 3 (StarterKit + TextStyle + Color). Script content stored as Tiptap JSON string in `.teleprompter-scripts.json`
-- **Styling:** Vanilla CSS only (`src/style.css`, `src/settings.css`) — no CSS framework. Design system: "Kinetic Resonance" — dark substrate, bioluminescent accents, strict central axis, pill geometry
+
+Three main views in a linear flow: `IdleView` → `EditView` → `ReadView`. `SettingsView` lives in a separate Tauri window (`settings`) with its own entry point (`settings-main.jsx` / `settings.html`).
+
+- **State:** Single Zustand store at `src/store/index.js` — all shared app state (view, config, scripts, playback flags) lives here.
+- **API bridge:** All Tauri IPC goes through `src/lib/api.js`. Never call `window.__TAURI__` directly from components (except `SettingsView`, which has a local API object because it runs in a separate window context and cannot import from `src/lib/api.js`).
+- **Mic engine:** `src/lib/mic.js` — Web Audio API VAD (85–3400 Hz voice band vs 4000–8000 Hz noise ratio). Returned as a closure with `start(deviceId)`, `stop()`, `setThreshold(v)`.
+- **Tokenizer:** `src/lib/tokenizer.js` — converts Tiptap JSON → flat token array for word-by-word rendering in `ReadView`. Recognizes `[PAUSE]`, `[SLOW]`, `[BREATHE]` markers.
+- **Editor:** Tiptap 3 (StarterKit + TextStyle + Color). Script content stored as Tiptap JSON string in `.teleprompter-scripts.json`.
+- **Styling:** Vanilla CSS only (`src/style.css`, `src/settings.css`) — no CSS framework. Design system: "Kinetic Resonance" — dark substrate, bioluminescent accents, strict central axis, pill geometry.
 
 ### Backend (`/src-tauri/src/lib.rs`)
-Single monolithic Rust file containing all Tauri commands, window creation, tray, and shortcuts. Windows are created programmatically — `tauri.conf.json` has `"windows": []`. The two managed windows are `"prompter"` and `"settings"`.
-- **Notch mode:** `elevate_to_notch_level()` uses `objc2` / `objc2-app-kit` to set `NSWindow` level 27 (above menu bar) and reposition flush to screen top. Must be called on the main thread (macOS Sequoia enforces this)
-- **Mode switch (`switch_mode`):** Spawns background thread → emits stop → polls for window close → dispatches `create_prompter_window` to main thread via `run_on_main_thread`. Avoids sleeping on main thread
-- **Tauri plugins:** `global-shortcut` (⌘⇧Space/↑/↓/R, also Ctrl variants; ⌥⌘T / Ctrl+Alt+T toggles click-through passthrough), `fs`, `positioner` (TrayCenter positioning)
-- **Config persistence:** `~/.teleprompter-config.json` (Config struct), scripts in `~/.teleprompter-scripts.json`
+
+Single monolithic Rust file containing all Tauri commands, window creation, tray, and shortcuts. Windows are created **programmatically** — `tauri.conf.json` has `"windows": []`. The two managed windows are `"prompter"` and `"settings"`.
+
+- **Notch mode:** `elevate_to_notch_level()` uses `objc2` / `objc2-app-kit` to set `NSWindow` level 27 (above menu bar) and reposition flush to screen top. Must be called on the **main thread** — macOS Sequoia enforces this.
+- **Mode switch (`switch_mode`):** Spawns a background thread → emits stop → polls for window close → dispatches `create_prompter_window` to main thread via `run_on_main_thread`. Avoids sleeping on main thread.
+- **Tauri plugins:** `global-shortcut` (⌘⇧Space/↑/↓/R, also Ctrl variants; ⌥⌘T / Ctrl+Alt+T toggles click-through passthrough — handled in Rust so it works even when JS ignores mouse events), `fs`, `positioner` (TrayCenter positioning — only valid after first tray click, guarded by `TRAY_CLICKED` atomic).
+- **Window ACL is opt-in per method, and `core:default` is not enough.** A window API can be present, correctly named, and still silently do nothing because `src-tauri/capabilities/default.json` never granted it — no error, no console warning, just a dead control. That is how every classic-mode resize handle stayed broken (fixed 2026-08-02, `76c963d`): the call was also misnamed `startResizeDrag`, but the ACL was the half that would have hidden the bug even after the rename. When a window control does nothing, check the capability file before debugging the handler. Currently granted beyond `core:default`: `core:window:allow-start-resize-dragging`.
+- **Config persistence:** `~/.teleprompter-config.json` (loaded/saved as `Config` struct). Scripts: `~/.teleprompter-scripts.json`.
+- **`set_config` command:** Accepts a partial JSON patch — only keys present in the payload are updated. `Config` is `#[serde(rename_all = "camelCase")]`, so the `config-update` Tauri event carries **camelCase** keys — the frontend stores them as-is. (`App.jsx`'s `getConfig()` bootstrap keeps `?? cfg.snake_case` fallbacks only for config files written by pre-camelCase builds.)
 
 ### Production build paths
+
 Vite outputs to `dist/`. Tauri `frontendDist` is `"../dist"`.
 
 | Window   | Release URL         | Vite entry       |
@@ -40,5 +51,13 @@ Vite outputs to `dist/`. Tauri `frontendDist` is `"../dist"`.
 | prompter | `index.html`        | `index.html`     |
 | settings | `settings.html`     | `settings.html`  |
 
-### Release
-Tag push triggers CI (`.github/workflows/release.yml`) → builds macOS aarch64 + x64 DMGs → uploads to GitHub Release. Windows support is planned for a follow-up release.
+Both `create_prompter_window` (mode-switch path) and `setup` (startup path) must use `"index.html"`, not `"renderer/index.html"`.
+
+### Key invariants
+
+- **`tauriInvoke` alias** — `src/lib/api.js` defines `const tauriInvoke = window.__TAURI__?.core?.invoke ?? ...`. Always use `tauriInvoke`, never bare `invoke` (not a global).
+- **Tauri event listeners must be cleaned up — hold the promise, not its result.** `tauriListen` (and `API.onConfigUpdate`, `API.onShortcut`) returns `Promise<UnlistenFn>`. Assigning the resolved fn to a local (`.then(fn => { unlisten = fn })` / `return () => unlisten?.()`) leaks the listener whenever cleanup runs before registration resolves — which `ReadView` hits on every Go/Stop cycle. Correct pattern: `const p = API.onX(cb)` / `return () => { p.then(fn => fn?.()) }`.
+- **Mic device tracking in `ReadView`:** The running engine's device is tracked in `prevMicDeviceIdRef` (a separate ref), not `configRef`. `configRef` is synced by an earlier effect in the same commit, so comparing `configRef.current.micDeviceId !== config.micDeviceId` is always false.
+- **`TRAY_CLICKED` guard:** `resize_settings` and `position_settings_window` only call `move_window(Position::TrayCenter)` if `TRAY_CLICKED` is true — calling positioner before the first tray click panics.
+- **Classic mode click-through:** `set_ignore_mouse` always passes `false` in classic mode — buttons must remain clickable.
+- **Window resize on view change** is handled by the `useEffect([view, isHovered, config.mode])` in `App.jsx` — no component should call `API.resizePrompter` directly.
